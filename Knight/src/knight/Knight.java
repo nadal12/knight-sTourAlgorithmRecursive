@@ -18,6 +18,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -39,14 +40,17 @@ public class Knight extends JFrame implements MouseListener {
     private JPanel board;
     private JPanel menu;
     private boolean busySpots[] = new boolean[DIMENSION * DIMENSION];
-    boolean defaultCursor = true;
+    boolean setBlockedBoxes = false;
+    boolean setKnightStartBox = false;
+    int knightBox = -1;
 
     //Declaraciones de la interfaz gráfica. 
-    JButton left;
-    JButton right;
-    JButton lightBulb;
-    JButton block;
-    JButton help;
+    JButton jbleft;
+    JButton jbright;
+    JButton jblightBulb;
+    JButton jbblock;
+    JButton jbhelp;
+    JButton jbknight;
 
     public Knight() {
 
@@ -95,11 +99,12 @@ public class Knight extends JFrame implements MouseListener {
         gl.setColumns(2);
         menu.setLayout(gl);
 
-        left = new JButton();
-        right = new JButton();
-        lightBulb = new JButton();
-        help = new JButton();
-        block = new JButton();
+        jbleft = new JButton();
+        jbright = new JButton();
+        jblightBulb = new JButton();
+        jbhelp = new JButton();
+        jbblock = new JButton();
+        jbknight = new JButton();
 
         //Ajustar el tamaño de las imágenes de los botones. 
         ImageIcon i1 = new ImageIcon(new ImageIcon("left.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
@@ -107,22 +112,25 @@ public class Knight extends JFrame implements MouseListener {
         ImageIcon i3 = new ImageIcon(new ImageIcon("light_bulb.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
         ImageIcon i4 = new ImageIcon(new ImageIcon("help.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
         ImageIcon i5 = new ImageIcon(new ImageIcon("block.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon i6 = new ImageIcon(new ImageIcon("knight.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
 
         //Configurar los botones.
-        left.setIcon(i1);
-        left.setToolTipText("Retroceder un paso");
-        right.setIcon(i2);
-        right.setToolTipText("Avanzar un paso");
-        lightBulb.setIcon(i3);
-        lightBulb.setToolTipText("Ver solución");
-        lightBulb.setCursor(Cursor.getDefaultCursor());
-        help.setIcon(i4);
-        help.setToolTipText("Ver ayuda");
-        help.setCursor(Cursor.getDefaultCursor());
-        block.setIcon(i5);
-        block.setToolTipText("Bloquear casillas");
-        
-        help.addActionListener(new ActionListener() {
+        jbleft.setIcon(i1);
+        jbleft.setToolTipText("Retroceder un paso");
+        jbright.setIcon(i2);
+        jbright.setToolTipText("Avanzar un paso");
+        jblightBulb.setIcon(i3);
+        jblightBulb.setToolTipText("Ver solución");
+        jblightBulb.setCursor(Cursor.getDefaultCursor());
+        jbhelp.setIcon(i4);
+        jbhelp.setToolTipText("Ver ayuda");
+        jbhelp.setCursor(Cursor.getDefaultCursor());
+        jbblock.setIcon(i5);
+        jbblock.setToolTipText("Bloquear casillas");
+        jbknight.setIcon(i6);
+        jbknight.setToolTipText("Establecer posición de inicio");
+
+        jbhelp.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent evt) {
@@ -131,7 +139,7 @@ public class Knight extends JFrame implements MouseListener {
 
         });
 
-        block.addActionListener(new ActionListener() {
+        jbblock.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent evt) {
@@ -140,12 +148,22 @@ public class Knight extends JFrame implements MouseListener {
 
         });
 
+        jbknight.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                jbKnightActionPerformed(evt);
+            }
+
+        });
+
         //Añadir los botones al panel del menú.
-        menu.add(help);
-        menu.add(lightBulb);
-        menu.add(left);
-        menu.add(right);
-        menu.add(block);
+        menu.add(jbhelp);
+        menu.add(jblightBulb);
+        menu.add(jbleft);
+        menu.add(jbright);
+        menu.add(jbblock);
+        menu.add(jbknight);
 
         this.add(menu, BorderLayout.WEST);
 
@@ -153,31 +171,62 @@ public class Knight extends JFrame implements MouseListener {
 
     private void jbBlockActionPerformed(ActionEvent evt) {
 
-        if (defaultCursor) {
+        if (!setBlockedBoxes) {
             Toolkit toolkit = Toolkit.getDefaultToolkit();
             Image image = toolkit.getImage("block.png");
             Cursor c = toolkit.createCustomCursor(image, new Point(menu.getX(), menu.getY()), "img");
             menu.setCursor(c);
             board.setCursor(c);
-            left.setEnabled(false);
-            right.setEnabled(false);
-            defaultCursor = false;
+            jbleft.setEnabled(false);
+            jbright.setEnabled(false);
+            jblightBulb.setEnabled(false);
+            jbknight.setEnabled(false);
+            setBlockedBoxes = true;
 
         } else {
 
             menu.setCursor(Cursor.getDefaultCursor());
             board.setCursor(Cursor.getDefaultCursor());
-            left.setEnabled(true);
-            right.setEnabled(true);
-            defaultCursor = true;
+            jbleft.setEnabled(true);
+            jbright.setEnabled(true);
+            jblightBulb.setEnabled(true);
+            jbknight.setEnabled(true);
+            setBlockedBoxes = false;
         }
 
     }
-    
+
     private void jbHelpActionPerformed(ActionEvent evt) {
-    
+
         info();
-    
+
+    }
+
+    private void jbKnightActionPerformed(ActionEvent evt) {
+
+        if (!setKnightStartBox) {
+            Toolkit toolkit = Toolkit.getDefaultToolkit();
+            Image image = toolkit.getImage("knight.png");
+            Cursor c = toolkit.createCustomCursor(image, new Point(menu.getX(), menu.getY()), "img");
+            menu.setCursor(c);
+            board.setCursor(c);
+            jbleft.setEnabled(false);
+            jbright.setEnabled(false);
+            jblightBulb.setEnabled(false);
+            jbblock.setEnabled(false);
+            setKnightStartBox = true;
+
+        } else {
+
+            menu.setCursor(Cursor.getDefaultCursor());
+            board.setCursor(Cursor.getDefaultCursor());
+            jbleft.setEnabled(true);
+            jbright.setEnabled(true);
+            jblightBulb.setEnabled(true);
+            jbblock.setEnabled(true);
+            setKnightStartBox = false;
+        }
+
     }
 
     public static void main(String[] args) {
@@ -240,13 +289,19 @@ public class Knight extends JFrame implements MouseListener {
             }
         }
     }
-    
-     public void info() {        
-         
+
+    public void info() {
+
         JOptionPane.showMessageDialog(null, "INSTRUCCIONES\n"
                 + "A\n"
                 + "B\n"
                 + "C\n", "Instrucciones", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    public boolean emptyBox(JLabel jl) {
+    
+        return jl.getIcon()==null;
+    
     }
 
     @Override
@@ -262,41 +317,112 @@ public class Knight extends JFrame implements MouseListener {
     @Override
     public void mouseReleased(MouseEvent e) {
 
-        JLabel label = new JLabel();
+        //Declaraciones
+        JLabel label = (JLabel) e.getSource();
+        ImageIcon block = new ImageIcon(new ImageIcon("block.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
+        ImageIcon knight = new ImageIcon(new ImageIcon("knight.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
+        
+        if (setBlockedBoxes) {
+        
+            if (emptyBox(label)) {
+            
+                label.setIcon(block);
+                label.setHorizontalAlignment(JLabel.CENTER);
 
-        if (!defaultCursor) {
+            } else {
+                System.out.println("Llega");
+                  label.setIcon(null);
+             
+            
+            }
+        
+        }
+        
+        if (setKnightStartBox) {
+        
+            if ((emptyBox(label))&&(knightBox==-1)) {
+            
+                label.setIcon(knight);
+                label.setHorizontalAlignment(JLabel.CENTER);
+
+            } 
+        
+        }
+        
+
+      /*  if (setBlockedBoxes) {
 
             label = (JLabel) e.getSource();
+            block = new ImageIcon(new ImageIcon("block.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
 
             if (label.getIcon() == null) {
 
-                ImageIcon block = new ImageIcon(new ImageIcon("block.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
                 label.setHorizontalAlignment(JLabel.CENTER);
                 label.setIcon(block);
-                
+
                 for (int i = 0; i < board.getComponentCount(); i++) {
-                    
+
                     if (board.getComponent(i).equals(label)) {
-                        //  FÓRMULA USADA: Posición = casilla(j)+Dimension*Fila(i)
+
                         busySpots[i] = true;
-                                                
+
                     }
                 }
-                
-                for (int i = 0; i < busySpots.length; i++) {
-                    
-                    System.out.print(busySpots[i]+", ");
-                  
-                }
-                  System.out.println();
-
             } else {
 
                 label.setIcon(null);
 
+                for (int i = 0; i < board.getComponentCount(); i++) {
+
+                    if (board.getComponent(i).equals(label)) {
+
+                        busySpots[i] = false;
+
+                    }
+                }
+
             }
 
         }
+
+        if (setKnightStartBox) {
+
+            label = (JLabel) e.getSource();
+            knight = new ImageIcon(new ImageIcon("knight.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
+
+            if ((label.getIcon() == null)) {
+
+                if (startBox != -1) {
+
+                    for (int i = 0; i < board.getComponentCount(); i++) {
+
+                        aux = (JLabel) board.getComponent(i);
+
+                        if (aux.getIcon()==knight) {
+
+                            aux.setIcon(null);
+                            
+                        }
+
+                    }
+
+                }
+                
+                label.setHorizontalAlignment(JLabel.CENTER);
+                label.setIcon(knight);
+
+                for (int i = 0; i < board.getComponentCount(); i++) {
+
+                    if (board.getComponent(i).equals(label)) {
+
+                        startBox = i;
+
+                    }
+                }
+
+            }
+
+        }*/
 
     }
 
