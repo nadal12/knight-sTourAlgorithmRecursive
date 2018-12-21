@@ -274,6 +274,21 @@ public class Knight extends JFrame implements MouseListener {
                 label.setHorizontalAlignment(JLabel.CENTER);
                 label.setIcon(block);
                 
+                for (int i = 0; i < board.getComponentCount(); i++) {
+                    
+                    if (board.getComponent(i).equals(label)) {
+                        //  FÓRMULA USADA: Posición = casilla(j)+Dimension*Fila(i)
+                        busySpots[i] = true;
+                                                
+                    }
+                }
+                
+                for (int i = 0; i < busySpots.length; i++) {
+                    
+                    System.out.print(busySpots[i]+", ");
+                  
+                }
+                  System.out.println();
 
             } else {
 
