@@ -345,6 +345,7 @@ public class Knight extends JFrame implements MouseListener {
                 label.setIcon(knight);
                 label.setHorizontalAlignment(JLabel.CENTER);
 
+                
             } 
         
         }
