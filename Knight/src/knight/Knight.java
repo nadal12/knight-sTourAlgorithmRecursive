@@ -8,6 +8,7 @@ package knight;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Point;
@@ -28,29 +29,35 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-/**
- *
- * @author nadal
- */
 public class Knight extends JFrame implements MouseListener {
 
     //Variables globales.
     private final int DIMENSION = 8;
+
+    //Array que indica las casillas bloqueadas o ocupadas. 
+    //-TRUE = Ocupada. 
+    //-FALSE = Libre.
+    private boolean busySpots[] = new boolean[DIMENSION * DIMENSION];
+
+    //Indica si esta activo el botón de bloquear casillas. 
+    private boolean setBlockedBoxes = false;
+
+    //Indica si esta activo el botón de escoger casilla del caballero. 
+    private boolean setKnightStartBox = false;
+
+    //Casilla donde se ubica el caballero.
+    private int knightBox = -1;
+
+    //Declaraciones de la interfaz gráfica. 
+    private JButton jbleft;
+    private JButton jbright;
+    private JButton jblightBulb;
+    private JButton jbblock;
+    private JButton jbhelp;
+    private JButton jbknight;
     private JLabel box;
     private JPanel board;
     private JPanel menu;
-    private boolean busySpots[] = new boolean[DIMENSION * DIMENSION];
-    boolean setBlockedBoxes = false;
-    boolean setKnightStartBox = false;
-    int knightBox = -1;
-
-    //Declaraciones de la interfaz gráfica. 
-    JButton jbleft;
-    JButton jbright;
-    JButton jblightBulb;
-    JButton jbblock;
-    JButton jbhelp;
-    JButton jbknight;
 
     public Knight() {
 
@@ -62,11 +69,21 @@ public class Knight extends JFrame implements MouseListener {
 
     public void initComponents() {
 
-        this.setSize(700, 600);
+        //Obtener resolución de pantalla. 
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int width = screenSize.width;
+        int height = screenSize.height;
+
+        this.setSize(width / 3, height / 2);
         this.setResizable(false);
         this.setTitle("Knight's tour");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
+        
+        //Establecer icono de ventana. 
+        ImageIcon wi = new ImageIcon("IMAGENES/knight.png");
+        Image windowIcon = wi.getImage();
+        this.setIconImage(windowIcon);
 
     }
 
@@ -99,6 +116,7 @@ public class Knight extends JFrame implements MouseListener {
         gl.setColumns(2);
         menu.setLayout(gl);
 
+        //Inicialización de los botones.
         jbleft = new JButton();
         jbright = new JButton();
         jblightBulb = new JButton();
@@ -106,13 +124,19 @@ public class Knight extends JFrame implements MouseListener {
         jbblock = new JButton();
         jbknight = new JButton();
 
+        //Descativar casillas por defecto. (Porque aún el caballero no tiene
+        //posición asignada). 
+        jbleft.setEnabled(false);
+        jbright.setEnabled(false);
+        jblightBulb.setEnabled(false);
+
         //Ajustar el tamaño de las imágenes de los botones. 
-        ImageIcon i1 = new ImageIcon(new ImageIcon("left.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
-        ImageIcon i2 = new ImageIcon(new ImageIcon("right.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
-        ImageIcon i3 = new ImageIcon(new ImageIcon("light_bulb.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
-        ImageIcon i4 = new ImageIcon(new ImageIcon("help.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
-        ImageIcon i5 = new ImageIcon(new ImageIcon("block.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
-        ImageIcon i6 = new ImageIcon(new ImageIcon("knight.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon i1 = new ImageIcon(new ImageIcon("IMAGENES/left.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon i2 = new ImageIcon(new ImageIcon("IMAGENES/right.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon i3 = new ImageIcon(new ImageIcon("IMAGENES/light_bulb.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon i4 = new ImageIcon(new ImageIcon("IMAGENES/help.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon i5 = new ImageIcon(new ImageIcon("IMAGENES/block.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon i6 = new ImageIcon(new ImageIcon("IMAGENES/knight.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
 
         //Configurar los botones.
         jbleft.setIcon(i1);
@@ -130,6 +154,7 @@ public class Knight extends JFrame implements MouseListener {
         jbknight.setIcon(i6);
         jbknight.setToolTipText("Establecer posición de inicio");
 
+        //Agregar escuchadores de eventos.
         jbhelp.addActionListener(new ActionListener() {
 
             @Override
@@ -165,6 +190,7 @@ public class Knight extends JFrame implements MouseListener {
         menu.add(jbblock);
         menu.add(jbknight);
 
+        //Añadir el menú a la izquierda. 
         this.add(menu, BorderLayout.WEST);
 
     }
@@ -172,26 +198,43 @@ public class Knight extends JFrame implements MouseListener {
     private void jbBlockActionPerformed(ActionEvent evt) {
 
         if (!setBlockedBoxes) {
+
+            //Elegir imagen del cursor.
             Toolkit toolkit = Toolkit.getDefaultToolkit();
-            Image image = toolkit.getImage("block.png");
+            Image image = toolkit.getImage("IMAGENES/block.png");
             Cursor c = toolkit.createCustomCursor(image, new Point(menu.getX(), menu.getY()), "img");
+
+            //Cambiar el cursor
             menu.setCursor(c);
             board.setCursor(c);
+
+            //Habilitar casillas.
             jbleft.setEnabled(false);
             jbright.setEnabled(false);
             jblightBulb.setEnabled(false);
             jbknight.setEnabled(false);
+
             setBlockedBoxes = true;
 
         } else {
 
+            //Poner el cursor por defecto.
             menu.setCursor(Cursor.getDefaultCursor());
             board.setCursor(Cursor.getDefaultCursor());
-            jbleft.setEnabled(true);
-            jbright.setEnabled(true);
-            jblightBulb.setEnabled(true);
+
+            //Habilitar las casillas.
             jbknight.setEnabled(true);
+
             setBlockedBoxes = false;
+            
+            if (knightBox != -1) {
+
+                //Habilitar botones.
+                jbleft.setEnabled(true);
+                jbright.setEnabled(true);
+                jblightBulb.setEnabled(true);
+
+            }
         }
 
     }
@@ -205,25 +248,42 @@ public class Knight extends JFrame implements MouseListener {
     private void jbKnightActionPerformed(ActionEvent evt) {
 
         if (!setKnightStartBox) {
+
+            //Elegir imagen del cursor.
             Toolkit toolkit = Toolkit.getDefaultToolkit();
-            Image image = toolkit.getImage("knight.png");
+            Image image = toolkit.getImage("IMAGENES/knight.png");
             Cursor c = toolkit.createCustomCursor(image, new Point(menu.getX(), menu.getY()), "img");
+
+            //Cambiar cursor. 
             menu.setCursor(c);
             board.setCursor(c);
+
+            //Habilitar casillas.
             jbleft.setEnabled(false);
             jbright.setEnabled(false);
             jblightBulb.setEnabled(false);
             jbblock.setEnabled(false);
+
             setKnightStartBox = true;
 
         } else {
 
+            //Poner el cursor por defecto.
             menu.setCursor(Cursor.getDefaultCursor());
             board.setCursor(Cursor.getDefaultCursor());
-            jbleft.setEnabled(true);
-            jbright.setEnabled(true);
-            jblightBulb.setEnabled(true);
+
+            //Habilitar las casillas. 
             jbblock.setEnabled(true);
+
+            if (knightBox != -1) {
+
+                //Habilitar botones.
+                jbleft.setEnabled(true);
+                jbright.setEnabled(true);
+                jblightBulb.setEnabled(true);
+
+            }
+
             setKnightStartBox = false;
         }
 
@@ -238,6 +298,7 @@ public class Knight extends JFrame implements MouseListener {
                 | IllegalAccessException | UnsupportedLookAndFeelException ex) {
             Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
         }
+
         //Se marca la ventana como objeto visible.    
         new Knight().setVisible(true);
 
@@ -292,16 +353,43 @@ public class Knight extends JFrame implements MouseListener {
 
     public void info() {
 
-        JOptionPane.showMessageDialog(null, "INSTRUCCIONES\n"
-                + "A\n"
-                + "B\n"
-                + "C\n", "Instrucciones", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null, "INSTRUCCIONES\n\n"
+                + "1. Seleccione las casillas que quiere bloquear a través del botón con el símbolo de prohibido.\n"
+                + "2. Seleccione una posición de inicio para el caballero con el botón del caballo.\n"
+                + "3. Empiece a realizar movimientos con las flechas izquierda/derecha.\n\n"
+                + "Nota I: Puede ver la solución directamente haciendo click en el botón de la bombilla.\n"
+                + "Nota II: No podrá iniciar los movimientos hasta que no establezca una posición de salida para el caballero.\n\n", "Instrucciones", JOptionPane.INFORMATION_MESSAGE);
     }
-    
-    public boolean emptyBox(JLabel jl) {
-    
-        return jl.getIcon()==null;
-    
+
+    public boolean isEmptyBox(JLabel jl) {
+
+        return jl.getIcon() == null;
+
+    }
+
+    /**
+     * Encuentra la posición del "label" pasado por parámetro dentro del
+     * tablero.
+     *
+     * @param label "Label" que se desea buscar.
+     * @return Posición donde se ubica. -1 si no ha sido encontrado.
+     */
+    public int findPosition(JLabel label) {
+
+        int position = -1;
+
+        for (int i = 0; i < board.getComponentCount(); i++) {
+
+            if (board.getComponent(i).equals(label)) {
+
+                position = i;
+
+            }
+
+        }
+
+        return position;
+
     }
 
     @Override
@@ -317,114 +405,51 @@ public class Knight extends JFrame implements MouseListener {
     @Override
     public void mouseReleased(MouseEvent e) {
 
-        //Declaraciones
-        JLabel label = (JLabel) e.getSource();
-        ImageIcon block = new ImageIcon(new ImageIcon("block.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
-        ImageIcon knight = new ImageIcon(new ImageIcon("knight.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
-        
-        if (setBlockedBoxes) {
-        
-            if (emptyBox(label)) {
-            
-                label.setIcon(block);
-                label.setHorizontalAlignment(JLabel.CENTER);
+        if (e.getButton() == MouseEvent.BUTTON1) {
 
-            } else {
-                System.out.println("Llega");
-                  label.setIcon(null);
-             
-            
-            }
-        
-        }
-        
-        if (setKnightStartBox) {
-        
-            if ((emptyBox(label))&&(knightBox==-1)) {
-            
-                label.setIcon(knight);
-                label.setHorizontalAlignment(JLabel.CENTER);
+            //Declaraciones
+            JLabel label = (JLabel) e.getSource();
+            ImageIcon block = new ImageIcon(new ImageIcon("IMAGENES/block.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
+            ImageIcon knight = new ImageIcon(new ImageIcon("IMAGENES/knight.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
 
-                
-            } 
-        
-        }
-        
+            if (setBlockedBoxes) {
 
-      /*  if (setBlockedBoxes) {
+                if (isEmptyBox(label)) {
+                    label.setIcon(block);
+                    label.setHorizontalAlignment(JLabel.CENTER);
+                    busySpots[findPosition(label)] = true;
 
-            label = (JLabel) e.getSource();
-            block = new ImageIcon(new ImageIcon("block.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
-
-            if (label.getIcon() == null) {
-
-                label.setHorizontalAlignment(JLabel.CENTER);
-                label.setIcon(block);
-
-                for (int i = 0; i < board.getComponentCount(); i++) {
-
-                    if (board.getComponent(i).equals(label)) {
-
-                        busySpots[i] = true;
-
-                    }
+                } else if (busySpots[findPosition(label)] == true) {
+                    label.setIcon(null);
+                    busySpots[findPosition(label)] = false;
                 }
-            } else {
-
-                label.setIcon(null);
-
-                for (int i = 0; i < board.getComponentCount(); i++) {
-
-                    if (board.getComponent(i).equals(label)) {
-
-                        busySpots[i] = false;
-
-                    }
-                }
-
             }
 
-        }
+            if (setKnightStartBox) {
 
-        if (setKnightStartBox) {
+                if ((isEmptyBox(label)) && (knightBox == -1)) {
 
-            label = (JLabel) e.getSource();
-            knight = new ImageIcon(new ImageIcon("knight.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
+                    label.setIcon(knight);
+                    label.setHorizontalAlignment(JLabel.CENTER);
+                    knightBox = findPosition(label);
 
-            if ((label.getIcon() == null)) {
+                } else if ((knightBox > -1) && (isEmptyBox(label))) {
 
-                if (startBox != -1) {
+                    JLabel auxLabel;
+                    auxLabel = (JLabel) board.getComponent(knightBox);
+                    auxLabel.setIcon(null);
 
-                    for (int i = 0; i < board.getComponentCount(); i++) {
+                    label.setIcon(knight);
+                    label.setHorizontalAlignment(JLabel.CENTER);
+                    knightBox = findPosition(label);
+                } else if (knightBox == findPosition(label)) {
 
-                        aux = (JLabel) board.getComponent(i);
-
-                        if (aux.getIcon()==knight) {
-
-                            aux.setIcon(null);
-                            
-                        }
-
-                    }
+                    label.setIcon(null);
+                    knightBox = -1;
 
                 }
-                
-                label.setHorizontalAlignment(JLabel.CENTER);
-                label.setIcon(knight);
-
-                for (int i = 0; i < board.getComponentCount(); i++) {
-
-                    if (board.getComponent(i).equals(label)) {
-
-                        startBox = i;
-
-                    }
-                }
-
             }
-
-        }*/
-
+        }
     }
 
     @Override
