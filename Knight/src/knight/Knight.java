@@ -69,7 +69,7 @@ public class Knight extends JFrame implements MouseListener {
         int width = screenSize.width;
         int height = screenSize.height;
 
-        this.setSize(width / 3, height / 2);
+        this.setSize(700, 600);
         this.setResizable(false);
         this.setTitle("Knight's tour");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
