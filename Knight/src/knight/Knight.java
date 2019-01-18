@@ -27,7 +27,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 public class Knight extends JFrame implements MouseListener {
 
     //Variables globales.
-    private final int DIMENSION = 8;
+    private final int DIMENSION = 5;
 
     //Array que indica las casillas bloqueadas o ocupadas. 
     //-TRUE = Ocupada. 
@@ -42,14 +42,19 @@ public class Knight extends JFrame implements MouseListener {
 
     //Casilla donde se ubica el caballero.
     private int knightBox = -1;
+    
+    //Indica si el estado actual es Play o Pause
+    private boolean play = false;
 
     //Declaraciones de la interfaz gráfica. 
-    private JButton jbleft;
-    private JButton jbright;
-    private JButton jblightBulb;
-    private JButton jbblock;
-    private JButton jbhelp;
-    private JButton jbknight;
+    private JButton jbLeft;
+    private JButton jbRight;
+    private JButton jbLightBulb;
+    private JButton jbBlock;
+    private JButton jbHelp;
+    private JButton jbKnight;
+    private JButton jbPlayPause;
+    private JButton jbReset;
     private JLabel box;
     private JPanel board;
     private JPanel menu;
@@ -107,23 +112,27 @@ public class Knight extends JFrame implements MouseListener {
         menu = new JPanel();
 
         GridLayout gl = new GridLayout();
-        gl.setRows(3);
+        gl.setRows(4);
         gl.setColumns(2);
         menu.setLayout(gl);
 
         //Inicialización de los botones.
-        jbleft = new JButton();
-        jbright = new JButton();
-        jblightBulb = new JButton();
-        jbhelp = new JButton();
-        jbblock = new JButton();
-        jbknight = new JButton();
+        jbPlayPause = new JButton();
+        jbReset = new JButton();
+        jbLeft = new JButton();
+        jbRight = new JButton();
+        jbLightBulb = new JButton();
+        jbHelp = new JButton();
+        jbBlock = new JButton();
+        jbKnight = new JButton();
 
         //Descativar casillas por defecto. (Porque aún el caballero no tiene
         //posición asignada). 
-        jbleft.setEnabled(false);
-        jbright.setEnabled(false);
-        jblightBulb.setEnabled(false);
+        jbLeft.setEnabled(false);
+        jbRight.setEnabled(false);
+        jbLightBulb.setEnabled(false);
+        jbPlayPause.setEnabled(false);
+        jbReset.setEnabled(false);
 
         //Ajustar el tamaño de las imágenes de los botones. 
         ImageIcon i1 = new ImageIcon(new ImageIcon("IMAGENES/left.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
@@ -132,25 +141,42 @@ public class Knight extends JFrame implements MouseListener {
         ImageIcon i4 = new ImageIcon(new ImageIcon("IMAGENES/help.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
         ImageIcon i5 = new ImageIcon(new ImageIcon("IMAGENES/block.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
         ImageIcon i6 = new ImageIcon(new ImageIcon("IMAGENES/knight.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon i7 = new ImageIcon(new ImageIcon("IMAGENES/play.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon i8 = new ImageIcon(new ImageIcon("IMAGENES/pause.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon i9 = new ImageIcon(new ImageIcon("IMAGENES/reset.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
 
         //Configurar los botones.
-        jbleft.setIcon(i1);
-        jbleft.setToolTipText("Retroceder un paso");
-        jbright.setIcon(i2);
-        jbright.setToolTipText("Avanzar un paso");
-        jblightBulb.setIcon(i3);
-        jblightBulb.setToolTipText("Ver solución");
-        jblightBulb.setCursor(Cursor.getDefaultCursor());
-        jbhelp.setIcon(i4);
-        jbhelp.setToolTipText("Ver ayuda");
-        jbhelp.setCursor(Cursor.getDefaultCursor());
-        jbblock.setIcon(i5);
-        jbblock.setToolTipText("Bloquear casillas");
-        jbknight.setIcon(i6);
-        jbknight.setToolTipText("Establecer posición de inicio");
+        jbLeft.setIcon(i1);
+        jbLeft.setToolTipText("Retroceder un paso");
+        jbRight.setIcon(i2);
+        jbRight.setToolTipText("Avanzar un paso");
+        jbLightBulb.setIcon(i3);
+        jbLightBulb.setToolTipText("Ver solución");
+        jbLightBulb.setCursor(Cursor.getDefaultCursor());
+        jbHelp.setIcon(i4);
+        jbHelp.setToolTipText("Ver ayuda");
+        jbHelp.setCursor(Cursor.getDefaultCursor());
+        jbBlock.setIcon(i5);
+        jbBlock.setToolTipText("Bloquear casillas");
+        jbKnight.setIcon(i6);
+        jbKnight.setToolTipText("Establecer posición de inicio");
+        jbPlayPause.setIcon(i7);
+        jbPlayPause.setToolTipText("Play/Pause");
+        jbReset.setIcon(i9);
+        jbReset.setToolTipText("Resetear");
 
         //Agregar escuchadores de eventos.
-        jbhelp.addActionListener(new ActionListener() {
+        
+        jbLightBulb.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                jbLightBulbActionPerformed(evt);
+            }
+
+        });
+        
+        jbHelp.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent evt) {
@@ -159,7 +185,7 @@ public class Knight extends JFrame implements MouseListener {
 
         });
 
-        jbblock.addActionListener(new ActionListener() {
+        jbBlock.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent evt) {
@@ -168,7 +194,7 @@ public class Knight extends JFrame implements MouseListener {
 
         });
 
-        jbknight.addActionListener(new ActionListener() {
+        jbKnight.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent evt) {
@@ -178,12 +204,14 @@ public class Knight extends JFrame implements MouseListener {
         });
 
         //Añadir los botones al panel del menú.
-        menu.add(jbhelp);
-        menu.add(jblightBulb);
-        menu.add(jbleft);
-        menu.add(jbright);
-        menu.add(jbblock);
-        menu.add(jbknight);
+        menu.add(jbPlayPause);
+        menu.add(jbReset);
+        menu.add(jbLeft);
+        menu.add(jbRight);
+        menu.add(jbHelp);
+        menu.add(jbLightBulb);
+        menu.add(jbBlock);
+        menu.add(jbKnight);
 
         //Añadir el menú a la izquierda. 
         this.add(menu, BorderLayout.WEST);
@@ -204,10 +232,10 @@ public class Knight extends JFrame implements MouseListener {
             board.setCursor(c);
 
             //Habilitar casillas.
-            jbleft.setEnabled(false);
-            jbright.setEnabled(false);
-            jblightBulb.setEnabled(false);
-            jbknight.setEnabled(false);
+            jbLeft.setEnabled(false);
+            jbRight.setEnabled(false);
+            jbLightBulb.setEnabled(false);
+            jbKnight.setEnabled(false);
 
             setBlockedBoxes = true;
 
@@ -218,22 +246,38 @@ public class Knight extends JFrame implements MouseListener {
             board.setCursor(Cursor.getDefaultCursor());
 
             //Habilitar las casillas.
-            jbknight.setEnabled(true);
+            jbKnight.setEnabled(true);
 
             setBlockedBoxes = false;
             
             if (knightBox != -1) {
 
                 //Habilitar botones.
-                jbleft.setEnabled(true);
-                jbright.setEnabled(true);
-                jblightBulb.setEnabled(true);
+                jbLeft.setEnabled(true);
+                jbRight.setEnabled(true);
+                jbLightBulb.setEnabled(true);
 
             }
         }
 
     }
 
+    private void jbLightBulbActionPerformed(ActionEvent evt) {
+
+        int [] sol = new int[DIMENSION*DIMENSION];
+        
+        try {
+            sol = Algorithm.KnightsTour(board, busySpots, knightBox);
+        } catch (Exception ex) {
+            Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        for (int i = 0; i < sol.length; i++) {
+            System.out.print(sol[i]+", ");
+        }
+        
+    }
+    
     private void jbHelpActionPerformed(ActionEvent evt) {
 
         info();
@@ -254,10 +298,10 @@ public class Knight extends JFrame implements MouseListener {
             board.setCursor(c);
 
             //Habilitar casillas.
-            jbleft.setEnabled(false);
-            jbright.setEnabled(false);
-            jblightBulb.setEnabled(false);
-            jbblock.setEnabled(false);
+            jbLeft.setEnabled(false);
+            jbRight.setEnabled(false);
+            jbLightBulb.setEnabled(false);
+            jbBlock.setEnabled(false);
 
             setKnightStartBox = true;
 
@@ -268,14 +312,14 @@ public class Knight extends JFrame implements MouseListener {
             board.setCursor(Cursor.getDefaultCursor());
 
             //Habilitar las casillas. 
-            jbblock.setEnabled(true);
+            jbBlock.setEnabled(true);
 
             if (knightBox != -1) {
 
                 //Habilitar botones.
-                jbleft.setEnabled(true);
-                jbright.setEnabled(true);
-                jblightBulb.setEnabled(true);
+                jbLeft.setEnabled(true);
+                jbRight.setEnabled(true);
+                jbLightBulb.setEnabled(true);
 
             }
 
@@ -369,6 +413,7 @@ public class Knight extends JFrame implements MouseListener {
      * @param label "Label" que se desea buscar.
      * @return Posición donde se ubica. -1 si no ha sido encontrado.
      */
+    
     public int findPosition(JLabel label) {
 
         int position = -1;
@@ -427,18 +472,23 @@ public class Knight extends JFrame implements MouseListener {
                     label.setIcon(knight);
                     label.setHorizontalAlignment(JLabel.CENTER);
                     knightBox = findPosition(label);
+                    busySpots[knightBox] = true; 
 
                 } else if ((knightBox > -1) && (isEmptyBox(label))) {
 
                     JLabel auxLabel;
                     auxLabel = (JLabel) board.getComponent(knightBox);
                     auxLabel.setIcon(null);
+                    busySpots[knightBox] = false; 
 
                     label.setIcon(knight);
                     label.setHorizontalAlignment(JLabel.CENTER);
                     knightBox = findPosition(label);
-                } else if (knightBox == findPosition(label)) {
+                    busySpots[knightBox] = true; 
 
+                } else if (knightBox == findPosition(label)) {
+                   
+                    busySpots[knightBox] = false;
                     label.setIcon(null);
                     knightBox = -1;
 
