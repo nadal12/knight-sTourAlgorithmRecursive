@@ -14,7 +14,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -27,7 +26,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 public class Knight extends JFrame implements MouseListener {
 
     //Variables globales.
-    private final int DIMENSION = 5;
+    private static final int DIMENSION = 8;
 
     //Array que indica las casillas bloqueadas o ocupadas. 
     //-TRUE = Ocupada. 
@@ -132,7 +131,7 @@ public class Knight extends JFrame implements MouseListener {
         jbRight.setEnabled(false);
         jbLightBulb.setEnabled(false);
         jbPlayPause.setEnabled(false);
-        jbReset.setEnabled(false);
+        jbReset.setEnabled(true);
 
         //Ajustar el tamaño de las imágenes de los botones. 
         ImageIcon i1 = new ImageIcon(new ImageIcon("IMAGENES/left.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
@@ -166,6 +165,15 @@ public class Knight extends JFrame implements MouseListener {
         jbReset.setToolTipText("Resetear");
 
         //Agregar escuchadores de eventos.
+        
+        jbReset.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                jbResetActionPerformed(evt);
+            }
+
+        });
         
         jbLightBulb.addActionListener(new ActionListener() {
 
@@ -217,6 +225,30 @@ public class Knight extends JFrame implements MouseListener {
         this.add(menu, BorderLayout.WEST);
 
     }
+    
+    private void jbResetActionPerformed(ActionEvent evt) {
+
+        //Resetear array de casillas ocupadas. 
+        for (int i = 0; i < busySpots.length; i++) {
+            
+            busySpots[i] = false; 
+            
+        }
+        
+        //Quitar el caballero del tablero. 
+        knightBox = -1; 
+        
+        JLabel aux; 
+        
+        //Quitar los iconos del tablero. 
+        for (int i = 0; i < board.getComponentCount(); i++) {
+            
+            aux = (JLabel) board.getComponent(i);
+            aux.setIcon(null);
+            
+        }
+
+    }
 
     private void jbBlockActionPerformed(ActionEvent evt) {
 
@@ -264,7 +296,9 @@ public class Knight extends JFrame implements MouseListener {
 
     private void jbLightBulbActionPerformed(ActionEvent evt) {
 
-        int [] sol = new int[DIMENSION*DIMENSION];
+        int [] sol = new int[DIMENSION*DIMENSION];   
+        
+        Algorithm.initBar();
         
         try {
             sol = Algorithm.KnightsTour(board, busySpots, knightBox);
@@ -430,6 +464,12 @@ public class Knight extends JFrame implements MouseListener {
 
         return position;
 
+    }
+    
+    public static int getDimension() {
+    
+        return DIMENSION; 
+    
     }
 
     @Override
