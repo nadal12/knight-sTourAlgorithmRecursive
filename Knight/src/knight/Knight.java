@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Point;
@@ -27,7 +28,7 @@ public class Knight extends JFrame implements MouseListener {
 
     //Variables globales.
     private static final int DIMENSION = 5;
-    
+
     //Array que indica las casillas bloqueadas o ocupadas. 
     //-TRUE = Ocupada. 
     //-FALSE = Libre.
@@ -44,6 +45,15 @@ public class Knight extends JFrame implements MouseListener {
 
     //Indica si el estado actual es Play o Pause
     private boolean play = false;
+
+    //Índice global para moverse con las flechas. 
+    private int globalIndex = 0;
+
+    //Array donde se almacena la solución del algoritmo. 
+    private int[] sol = new int[DIMENSION * DIMENSION];
+
+    //Número de casillas bloqueadas. 
+    private int numBSpots = 0;
 
     //Declaraciones de la interfaz gráfica. 
     private JButton jbLeft;
@@ -83,7 +93,6 @@ public class Knight extends JFrame implements MouseListener {
         ImageIcon wi = new ImageIcon("IMAGENES/knight.png");
         Image windowIcon = wi.getImage();
         this.setIconImage(windowIcon);
-
     }
 
     public void initBoard() {
@@ -165,6 +174,32 @@ public class Knight extends JFrame implements MouseListener {
         jbReset.setToolTipText("Resetear");
 
         //Agregar escuchadores de eventos.
+        jbPlayPause.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                jbPlayPauseActionPerformed(evt);
+            }
+
+        });
+
+        jbRight.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                jbRightActionPerformed(evt);
+            }
+
+        });
+
+        jbLeft.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                jbLeftActionPerformed(evt);
+            }
+
+        });
         jbReset.addActionListener(new ActionListener() {
 
             @Override
@@ -225,27 +260,35 @@ public class Knight extends JFrame implements MouseListener {
 
     }
 
+    private void jbPlayPauseActionPerformed(ActionEvent evt) {
+
+        while (globalIndex < sol.length - numBSpots) {
+            moveRight();
+            board.paintComponents(board.getGraphics());
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+    }
+
+    private void jbRightActionPerformed(ActionEvent evt) {
+
+        moveRight();
+
+    }
+
+    private void jbLeftActionPerformed(ActionEvent evt) {
+
+        moveLeft();
+
+    }
+
     private void jbResetActionPerformed(ActionEvent evt) {
 
-        //Resetear array de casillas ocupadas. 
-        for (int i = 0; i < busySpots.length; i++) {
-
-            busySpots[i] = false;
-
-        }
-
-        //Quitar el caballero del tablero. 
-        knightBox = -1;
-
-        JLabel aux;
-
-        //Quitar los iconos del tablero. 
-        for (int i = 0; i < board.getComponentCount(); i++) {
-
-            aux = (JLabel) board.getComponent(i);
-            aux.setIcon(null);
-
-        }
+        reset();
 
     }
 
@@ -263,8 +306,6 @@ public class Knight extends JFrame implements MouseListener {
             board.setCursor(c);
 
             //Habilitar casillas.
-            jbLeft.setEnabled(false);
-            jbRight.setEnabled(false);
             jbLightBulb.setEnabled(false);
             jbKnight.setEnabled(false);
 
@@ -284,8 +325,6 @@ public class Knight extends JFrame implements MouseListener {
             if (knightBox != -1) {
 
                 //Habilitar botones.
-                jbLeft.setEnabled(true);
-                jbRight.setEnabled(true);
                 jbLightBulb.setEnabled(true);
 
             }
@@ -294,16 +333,42 @@ public class Knight extends JFrame implements MouseListener {
     }
 
     private synchronized void jbLightBulbActionPerformed(ActionEvent evt) {
-        
-        int[] sol = new int[DIMENSION * DIMENSION];
+
+        boolean validSolution = true;
+
+        //Contar el número de casillas bloqueadas. 
+        for (int i = 0; i < busySpots.length; i++) {
+            if (busySpots[i]) {
+                numBSpots++;
+            }
+        }
+
+        //Desactivar botón. 
+        jbLightBulb.setEnabled(false);
+
         Algorithm.initCombinationsWindow();
-        Thread t = new Thread(new Algorithm(board, busySpots, knightBox));
-        t.start();
-  
+//        Thread t = new Thread(new Algorithm(board, busySpots, knightBox));
+//        t.start();
+        try {
+            sol = Algorithm.KnightsTour(board, busySpots, knightBox);
+        } catch (Exception ex) {
+            validSolution = false;
+            Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         for (int i = 0; i < sol.length; i++) {
             System.out.print(sol[i] + ", ");
         }
 
+        //Habilitar flechas para que el usuario pueda mover el caballero.
+        if (validSolution) {
+            jbPlayPause.setEnabled(true);
+            jbLeft.setEnabled(true);
+            jbRight.setEnabled(true);
+        }
+
+        jbBlock.setEnabled(false);
+        jbKnight.setEnabled(false);
     }
 
     private void jbHelpActionPerformed(ActionEvent evt) {
@@ -345,8 +410,6 @@ public class Knight extends JFrame implements MouseListener {
             if (knightBox != -1) {
 
                 //Habilitar botones.
-                jbLeft.setEnabled(true);
-                jbRight.setEnabled(true);
                 jbLightBulb.setEnabled(true);
 
             }
@@ -422,9 +485,8 @@ public class Knight extends JFrame implements MouseListener {
         JOptionPane.showMessageDialog(null, "INSTRUCCIONES\n\n"
                 + "1. Seleccione las casillas que quiere bloquear a través del botón con el símbolo de prohibido.\n"
                 + "2. Seleccione una posición de inicio para el caballero con el botón del caballo.\n"
-                + "3. Empiece a realizar movimientos con las flechas izquierda/derecha.\n\n"
-                + "Nota I: Puede ver la solución directamente haciendo click en el botón de la bombilla.\n"
-                + "Nota II: No podrá iniciar los movimientos hasta que no establezca una posición de salida para el caballero.\n\n", "Instrucciones", JOptionPane.INFORMATION_MESSAGE);
+                + "3. Calcule una posible solución con el botón de la bombilla.\n\n"
+                + "Nota: No podrá iniciar los movimientos hasta que no establezca una posición de salida para el caballero y se calcule una solución válida.\n\n", "Instrucciones", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public boolean isEmptyBox(JLabel jl) {
@@ -455,6 +517,82 @@ public class Knight extends JFrame implements MouseListener {
         }
 
         return position;
+
+    }
+
+    public void moveRight() {
+
+        if (globalIndex < sol.length - numBSpots) {
+
+            JLabel aux;
+            aux = (JLabel) board.getComponent(sol[globalIndex]);
+            aux.setIcon(null);
+            aux.setText(String.valueOf(globalIndex));
+            aux.setHorizontalAlignment(JLabel.CENTER);
+            aux.setFont(new Font("Serif", Font.ITALIC, 30));
+            aux.setForeground(Color.red);
+
+            ImageIcon knight = new ImageIcon(new ImageIcon("IMAGENES/knight.png").getImage().getScaledInstance(aux.getWidth() - 20, aux.getHeight() - 20, Image.SCALE_DEFAULT));
+            globalIndex++;
+            aux = (JLabel) board.getComponent(sol[globalIndex]);
+            aux.setIcon(knight);
+            aux.setHorizontalAlignment(JLabel.CENTER);
+
+        }
+    }
+
+    public void moveLeft() {
+
+        if (globalIndex > 0) {
+
+            JLabel aux = (JLabel) board.getComponent(sol[globalIndex]);
+            aux.setIcon(null);
+            ImageIcon knight = new ImageIcon(new ImageIcon("IMAGENES/knight.png").getImage().getScaledInstance(aux.getWidth() - 20, aux.getHeight() - 20, Image.SCALE_DEFAULT));
+            globalIndex--;
+            aux = (JLabel) board.getComponent(sol[globalIndex]);
+            aux.setText(null);
+            aux.setIcon(knight);
+            aux.setHorizontalAlignment(JLabel.CENTER);
+
+        }
+
+    }
+
+    public void reset() {
+
+        //Resetear array de casillas ocupadas. 
+        for (int i = 0; i < busySpots.length; i++) {
+
+            busySpots[i] = false;
+
+        }
+        //Reset número de casillas bloqueadas. 
+        numBSpots = 0;
+
+        //Quitar el caballero del tablero. 
+        knightBox = -1;
+
+        //Resetear globalIndex. 
+        globalIndex = 0;
+
+        //Activar/Desactivar botones correspondientes. 
+        jbLeft.setEnabled(false);
+        jbRight.setEnabled(false);
+        jbLightBulb.setEnabled(false);
+        jbPlayPause.setEnabled(false);
+        jbBlock.setEnabled(true);
+        jbKnight.setEnabled(true);
+
+        JLabel aux;
+
+        //Quitar los iconos y números del tablero. 
+        for (int i = 0; i < board.getComponentCount(); i++) {
+
+            aux = (JLabel) board.getComponent(i);
+            aux.setIcon(null);
+            aux.setText(null);
+
+        }
 
     }
 

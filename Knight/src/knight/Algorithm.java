@@ -8,18 +8,17 @@ package knight;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JPanel;
 
 /**
  *
  * @author nadal
  */
-public class Algorithm extends Thread {
+public class Algorithm /*extends Thread */{
 
     public static BigInteger numberOfCombinations = new BigInteger("1"); 
     private static CombinationsWindow cw; 
+    
     //Variables para el hilo. 
     JPanel b;
     boolean [] bool;
@@ -28,8 +27,7 @@ public class Algorithm extends Thread {
     public static void initCombinationsWindow() {
     
         cw = new CombinationsWindow();
-        cw.setVisible(true); 
-        cw.modifyValue(numberOfCombinations);
+        cw.setVisible(true);
     
     }
     
@@ -45,18 +43,18 @@ public class Algorithm extends Thread {
     
     }
     
-    @Override
-    public void run() {
-        
-        try {
-            KnightsTour(b, bool, k);
-        } catch (Exception ex) {
-            Logger.getLogger(Algorithm.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    
-    }
+//    @Override
+//    public void run() {
+//        
+//        try {
+//            KnightsTour(b, bool, k);
+//        } catch (Exception ex) {
+//            Logger.getLogger(Algorithm.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//    
+//    }
 
-    public synchronized int[] KnightsTour(JPanel board, boolean[] busySpots, int knightBox) throws Exception {
+    public static int[] KnightsTour(JPanel board, boolean[] busySpots, int knightBox) throws Exception {
         int[] solution = new int[board.getComponentCount()];
         int index = 1;
         int numBSpots = 0;
@@ -72,13 +70,17 @@ public class Algorithm extends Thread {
         numBSpots--; //Quitar la posición inicial de caballo
 
         if (!KnightsTour(busySpots, solution, index, numBSpots)) {
-            throw new Exception();
+            cw.modifyValue(numberOfCombinations, false);
+            numberOfCombinations = BigInteger.ONE;
+            throw new Exception("No se ha encontrado solución con esa configuración de tablero.");
         }
-        return solution;
         
+        cw.modifyValue(numberOfCombinations, true);
+        numberOfCombinations = BigInteger.ONE;
+        return solution;
     }
 
-    private boolean KnightsTour(boolean[] busySpots, int[] solution, int index, int numBSpots) {
+    private static boolean KnightsTour(boolean[] busySpots, int[] solution, int index, int numBSpots) {
 //        for (int j = 0; j < busySpots.length; j++) {
 //                    System.out.print(busySpots[j]+" ");
 //                    if (j%5 == 4) System.out.println("");
@@ -102,7 +104,8 @@ public class Algorithm extends Thread {
 
                 index--;
                 numberOfCombinations = numberOfCombinations.add(BigInteger.ONE);
-                cw.modifyValue(numberOfCombinations);
+                //cw.modifyValue(numberOfCombinations, true);
+                //cw.paintComponents(cw.getGraphics());
                 busySpots[possibleMoves.get(i)] = false;
                 solution[index] = -1;
 
