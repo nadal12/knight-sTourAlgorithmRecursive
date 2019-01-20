@@ -300,7 +300,7 @@ public class Knight extends JFrame implements MouseListener {
         jbRight.setIcon(i2);
         jbRight.setToolTipText("Avanzar un paso");
         jbLightBulb.setIcon(i3);
-        jbLightBulb.setToolTipText("Ver solución");
+        jbLightBulb.setToolTipText("Calcular solución");
         jbLightBulb.setCursor(Cursor.getDefaultCursor());
         jbHelp.setIcon(i4);
         jbHelp.setToolTipText("Ver ayuda");
