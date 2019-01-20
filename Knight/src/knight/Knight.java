@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -384,8 +385,12 @@ public class Knight extends JFrame implements MouseListener {
 
     }
 
-    private synchronized void jbLightBulbActionPerformed(ActionEvent evt) {
-
+    private void jbLightBulbActionPerformed(ActionEvent evt) {
+        String title = "Calculando solución...";
+        String message = "";
+        JOptionPane pane = new JOptionPane(message);
+        JDialog dialog = pane.createDialog(this, title);
+        
         boolean validSolution = true;
 
         //Contar el número de casillas bloqueadas. 
@@ -398,13 +403,15 @@ public class Knight extends JFrame implements MouseListener {
         //Desactivar botón. 
         jbLightBulb.setEnabled(false);
 
-        Algorithm.initCombinationsWindow();
-//        Thread t = new Thread(new Algorithm(board, busySpots, knightBox));
-//        t.start();
+        Algorithm.initCombinationsWindow(this);
+        this.setEnabled(false);
+        
         try {
             sol = Algorithm.KnightsTour(board, busySpots, knightBox);
+            pane.setMessage(message);
         } catch (Exception ex) {
             validSolution = false;
+            pane.setMessage("No se ha encontrado una solución para la configuración actual");
             Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
         }
 
@@ -622,7 +629,7 @@ public class Knight extends JFrame implements MouseListener {
             aux.setIcon(null);
             aux.setText(String.valueOf(globalIndex));
             aux.setHorizontalAlignment(JLabel.CENTER);
-            aux.setFont(new Font("Serif", Font.ITALIC, 30));
+            aux.setFont(new Font("Serif", Font.ITALIC, 50));
             aux.setForeground(Color.red);
 
             ImageIcon knight = new ImageIcon(new ImageIcon("IMAGENES/knight.png").getImage().getScaledInstance(aux.getWidth() - 20, aux.getHeight() - 20, Image.SCALE_DEFAULT));

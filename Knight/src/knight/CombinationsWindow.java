@@ -7,6 +7,8 @@ package knight;
 
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.math.BigInteger;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -22,8 +24,9 @@ public class CombinationsWindow extends JFrame {
     private JTextArea textArea;
     private int sizeX = 400;
     private int sizeY = 200;
+    private JFrame parentFrame;
 
-    public CombinationsWindow() {
+    public CombinationsWindow(JFrame parent) {
         super("Calculando solución...");
         // setDefaultCloseOperation();
         dispose();
@@ -36,8 +39,15 @@ public class CombinationsWindow extends JFrame {
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         textArea.setEditable(false);
+        parentFrame = parent;
 
         this.add(textArea);
+        
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
+                parentFrame.setEnabled(true);
+            }
+        });
 
     }
 

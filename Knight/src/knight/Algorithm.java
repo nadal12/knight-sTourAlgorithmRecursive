@@ -8,6 +8,7 @@ package knight;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 /**
@@ -24,9 +25,9 @@ public class Algorithm /*extends Thread */{
     boolean [] bool;
     int k;
     
-    public static void initCombinationsWindow() {
+    public static void initCombinationsWindow(JFrame parentFrame) {
     
-        cw = new CombinationsWindow();
+        cw = new CombinationsWindow(parentFrame);
         cw.setVisible(true);
     
     }
@@ -34,25 +35,6 @@ public class Algorithm /*extends Thread */{
     public enum movements {
         UUR, URR, RRD, RDD, DDL, DLL, LLU, LUU
     }
-    
-    public Algorithm(JPanel board, boolean[] busySpots, int knightBox) {
-    
-        b = board; 
-        bool = busySpots;
-        k = knightBox;
-    
-    }
-    
-//    @Override
-//    public void run() {
-//        
-//        try {
-//            KnightsTour(b, bool, k);
-//        } catch (Exception ex) {
-//            Logger.getLogger(Algorithm.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    
-//    }
 
     public static int[] KnightsTour(JPanel board, boolean[] busySpots, int knightBox) throws Exception {
         int[] solution = new int[board.getComponentCount()];
@@ -81,12 +63,6 @@ public class Algorithm /*extends Thread */{
     }
 
     private static boolean KnightsTour(boolean[] busySpots, int[] solution, int index, int numBSpots) {
-//        for (int j = 0; j < busySpots.length; j++) {
-//                    System.out.print(busySpots[j]+" ");
-//                    if (j%5 == 4) System.out.println("");
-//                }
-//                
-//                System.out.println("");
              
         if (index + numBSpots < solution.length) {
 
@@ -104,8 +80,6 @@ public class Algorithm /*extends Thread */{
 
                 index--;
                 numberOfCombinations = numberOfCombinations.add(BigInteger.ONE);
-                //cw.modifyValue(numberOfCombinations, true);
-                //cw.paintComponents(cw.getGraphics());
                 busySpots[possibleMoves.get(i)] = false;
                 solution[index] = -1;
 
@@ -282,47 +256,13 @@ public class Algorithm /*extends Thread */{
         return true;
     }
 
-    private static void printMovement(int i) {
-        switch (movements.values()[i]) {
-            case UUR:
-
-                System.out.println("up-up-right");
-                break;
-            case URR:
-
-                System.out.println("u-right-right");
-                break;
-            case RRD:
-
-                System.out.println("right-right-down");
-                break;
-            case RDD:
-
-                System.out.println("right-down-down");
-                break;
-            case DDL:
-
-                System.out.println("down-down-left");
-                break;
-            case DLL:
-
-                System.out.println("down-left-left");
-                break;
-            case LLU:
-
-                System.out.println("left-left-up");
-                break;
-            case LUU:
-
-                System.out.println("left-up-up");
-                break;
-        }
-    }
-
     private static void printSolution(int[] solution, boolean[] busySpots) {
         for (int i = 0; i < solution.length; i++) {
             System.out.print(solution[i] + "    ");
         }
     }
 
+    public static BigInteger getCombinationCount() {
+        return numberOfCombinations;
+    }
 }
