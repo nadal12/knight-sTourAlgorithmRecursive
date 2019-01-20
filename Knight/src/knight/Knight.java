@@ -11,6 +11,7 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.logging.Level;
@@ -19,15 +20,23 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 public class Knight extends JFrame implements MouseListener {
 
+    
+    //Variable global para inicializar la ventana
+    static Knight k;
+    
     //Variables globales.
-    private static final int DIMENSION = 5;
+    private static int DIMENSION = 5;
 
     //Array que indica las casillas bloqueadas o ocupadas. 
     //-TRUE = Ocupada. 
@@ -67,18 +76,22 @@ public class Knight extends JFrame implements MouseListener {
     private JLabel box;
     private JPanel board;
     private JPanel menu;
+    private JMenuBar jmBar;
+    private JMenu jMenu;
+    private JMenuItem jmChSize;
+    private JMenuItem jmInstrucciones;
 
-    public Knight() {
+    public Knight(int DIMENSION) {
 
         initComponents();
         initControlMenu();
-        initBoard();
+        initBoard(DIMENSION);
 
     }
 
     public void initComponents() {
 
-        //Obtener resolución de pantalla. 
+        //OBTENER RESOLUCION DE PANTALLA
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int width = screenSize.width;
         int height = screenSize.height;
@@ -88,14 +101,53 @@ public class Knight extends JFrame implements MouseListener {
         this.setTitle("Knight's tour");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
-
+        
         //Establecer icono de ventana. 
         ImageIcon wi = new ImageIcon("IMAGENES/knight.png");
         Image windowIcon = wi.getImage();
         this.setIconImage(windowIcon);
+        
+        //INICIALIZACIÓN DEL MENU
+        jmBar = new JMenuBar();
+        jMenu = new JMenu("Tablero");
+        jmBar.add(jMenu);
+        
+        jmChSize = new JMenuItem("Cambiar dimensiones");
+        jmChSize.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, 
+                ActionEvent.CTRL_MASK));
+        jmChSize.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                int newDim = k.changeSizePane();
+                if (newDim != DIMENSION) {
+                    k.dispose();
+                    k = null;
+                    k = new Knight(newDim);
+                    k.setVisible(true);
+                    DIMENSION = newDim;
+                }
+                
+            }
+        });
+        jMenu.add(jmChSize);
+        
+        jmInstrucciones = new JMenuItem("Instrucciones");
+        jmInstrucciones.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I,
+                ActionEvent.CTRL_MASK));
+        jmInstrucciones.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                info();
+            }
+        });
+        
+        jMenu.add(jmInstrucciones);
+        jMenu.addSeparator();
+        this.setJMenuBar(jmBar);
+
     }
 
-    public void initBoard() {
+    public void initBoard(int DIMENSION) {
 
         //Se inicializa el tablero 
         board = new JPanel();
@@ -106,7 +158,7 @@ public class Knight extends JFrame implements MouseListener {
         gl.setColumns(DIMENSION);
         board.setLayout(gl);
 
-        printBoard();
+        printBoard(DIMENSION);
 
         //Se añade el panel a la ventana. 
         this.add(board);
@@ -429,12 +481,12 @@ public class Knight extends JFrame implements MouseListener {
             Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        Knight k = new Knight();
-        k.setVisible(true);
+        //Se marca la ventana como objeto visible.    
+        Knight.start();
     }
 
     //  FÓRMULA USADA: Posición = casilla(j)+Dimension*Fila(i)
-    public void printBoard() {
+    public void printBoard(int DIMENSION) {
 
         for (int i = 0; i < DIMENSION; i++) {
             for (int j = 0; j < DIMENSION; j++) {
@@ -478,6 +530,47 @@ public class Knight extends JFrame implements MouseListener {
                 board.add(box);
             }
         }
+    }
+    
+    public static void start() {
+        k = new Knight(DIMENSION);
+        k.setVisible(true);
+        int newDim = k.changeSizePane();
+        
+        if (newDim != DIMENSION) {
+            k.dispose();
+            k = null;
+            k = new Knight(newDim);
+            k.setVisible(true);
+            DIMENSION = newDim;
+        }
+        
+    }
+    
+    public int changeSizePane() {
+        String title = "Configuración del tablero";
+        String message = "El tablero está configurado como un tablero de "+
+                "ajedrez de 8x8.\nSi desea cambiarlo, elija una opción de "+
+                "la lista.\nSino, presione cancelar.\n";
+        String options[] = {"2x2","3x3","4x4","5x5","6x6",
+                "7x7","8x8","9x9","10x10"};
+        final int indexOfDefault = DIMENSION -2; //Opción 8x8 ocupa posición 6 dentro del array
+        int option = 0;
+        String option_str = (String) JOptionPane.showInputDialog(null, message, title, 
+                JOptionPane.QUESTION_MESSAGE, 
+                null, options, options[indexOfDefault]);
+        
+        if (option_str == null) {
+            return indexOfDefault + 2;
+        } else {
+            for (int i = 0; i<options.length;i++) {
+                if (option_str.equals(options[i])) {
+                    option = i;
+                    break;
+                }
+            }
+        }
+        return option + 2;     
     }
 
     public void info() {
