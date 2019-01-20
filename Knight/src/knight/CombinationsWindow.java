@@ -24,9 +24,8 @@ public class CombinationsWindow extends JFrame {
     private JTextArea textArea;
     private int sizeX = 400;
     private int sizeY = 200;
-    private JFrame parentFrame;
 
-    public CombinationsWindow(JFrame parent) {
+    public CombinationsWindow(JFrame parent)  {
         super("Calculando solución...");
         // setDefaultCloseOperation();
         dispose();
@@ -39,13 +38,12 @@ public class CombinationsWindow extends JFrame {
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         textArea.setEditable(false);
-        parentFrame = parent;
 
         this.add(textArea);
         
         this.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent we) {
-                parentFrame.setEnabled(true);
+                parent.setEnabled(true);
             }
         });
 

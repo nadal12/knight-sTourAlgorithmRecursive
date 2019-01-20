@@ -36,7 +36,7 @@ public class Algorithm /*extends Thread */{
         UUR, URR, RRD, RDD, DDL, DLL, LLU, LUU
     }
 
-    public static int[] KnightsTour(JPanel board, boolean[] busySpots, int knightBox) throws Exception {
+    public static int[] KnightsTour(JPanel board, boolean[] busySpots, int knightBox) {
         int[] solution = new int[board.getComponentCount()];
         int index = 1;
         int numBSpots = 0;
@@ -54,7 +54,7 @@ public class Algorithm /*extends Thread */{
         if (!KnightsTour(busySpots, solution, index, numBSpots)) {
             cw.modifyValue(numberOfCombinations, false);
             numberOfCombinations = BigInteger.ONE;
-            throw new Exception("No se ha encontrado solución con esa configuración de tablero.");
+            solution[0] = -1;
         }
         
         cw.modifyValue(numberOfCombinations, true);
@@ -254,12 +254,6 @@ public class Algorithm /*extends Thread */{
                 break;
         }
         return true;
-    }
-
-    private static void printSolution(int[] solution, boolean[] busySpots) {
-        for (int i = 0; i < solution.length; i++) {
-            System.out.print(solution[i] + "    ");
-        }
     }
 
     public static BigInteger getCombinationCount() {
