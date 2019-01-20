@@ -314,16 +314,30 @@ public class Knight extends JFrame implements MouseListener {
     }
 
     private void jbPlayPauseActionPerformed(ActionEvent evt) {
-
-        while (globalIndex < sol.length - numBSpots) {
-            moveRight();
-            board.paintComponents(board.getGraphics());
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
+        play = !play;
+        
+        if (!play) return;
+        
+        Thread t = new Thread() {
+            @Override
+            public void run() {  // override the run() for the running behaviors
+                for (int i = 0; i < 100000; ++i) {
+                     
+                    while (globalIndex < sol.length - numBSpots) {
+                        if (!play) break;
+                        moveRight();
+                        board.paintComponents(board.getGraphics());
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
             }
-        }
+        };
+        t.start();  // call back run()
+        
 
     }
 
