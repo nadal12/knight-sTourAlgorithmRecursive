@@ -396,12 +396,31 @@ public class Knight extends JFrame implements MouseListener {
             /*Cuando el estado de play == false, no se está ejecutando el 
             recorrido al tablero. Poner ícono de play en botón.*/
             jbPlayPause.setIcon(iplay);
+            
+            //Habilitar botones al presionar pausa
+            jbLeft.setEnabled(true);
+            jbRight.setEnabled(true);
+            jbLightBulb.setEnabled(true);
+            jbBlock.setEnabled(true);
+            jbHelp.setEnabled(true);
+            jbKnight.setEnabled(true);
+            jbReset.setEnabled(true);
             return;
         }
 
         /*Cuando play == true, se está ejecutando el recorrido al tablero.
         Poner ícono de pause en botón.*/
         jbPlayPause.setIcon(ipause);
+        
+        //Deshabilitar botones mientras se realiza recorrido
+        jbLeft.setEnabled(false);
+        jbRight.setEnabled(false);
+        jbLightBulb.setEnabled(false);
+        jbBlock.setEnabled(false);
+        jbHelp.setEnabled(false);
+        jbKnight.setEnabled(false);
+        jbReset.setEnabled(false);
+        
 
         /*Ejecutar bucle en otro hilo para evitar que la ventana se bloquee
         al ejecutar el recorrido al tablero*/
@@ -421,6 +440,19 @@ public class Knight extends JFrame implements MouseListener {
                         Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
+                //Cambiar de vuelta a icono de play al finalizar recorrido
+                int iconSize = 30;
+                ImageIcon iplay = new ImageIcon(new ImageIcon("IMAGENES/play.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+                jbPlayPause.setIcon(iplay);
+            
+                //Habilitar botones al finalizar recorrido
+                jbLeft.setEnabled(true);
+                jbRight.setEnabled(true);
+                jbLightBulb.setEnabled(true);
+                jbBlock.setEnabled(true);
+                jbHelp.setEnabled(true);
+                jbKnight.setEnabled(true);
+                jbReset.setEnabled(true);
             }
         };
         t.start();  // call back run()
