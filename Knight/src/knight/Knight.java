@@ -18,7 +18,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -32,17 +31,16 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 public class Knight extends JFrame implements MouseListener {
 
-    
     //Variable global para inicializar la ventana
     static Knight k;
-    
+
     //Variables globales.
     private static int DIMENSION = 8;
 
     //Array que indica las casillas bloqueadas o ocupadas. 
     //-TRUE = Ocupada. 
     //-FALSE = Libre.
-    private boolean busySpots[] = new boolean[DIMENSION * DIMENSION];
+    private boolean busySpots[];
 
     //Indica si esta activo el botón de bloquear casillas. 
     private boolean setBlockedBoxes = false;
@@ -60,7 +58,7 @@ public class Knight extends JFrame implements MouseListener {
     private int globalIndex = 0;
 
     //Array donde se almacena la solución del algoritmo. 
-    private int[] sol = new int[DIMENSION * DIMENSION];
+    private int[] sol;
 
     //Número de casillas bloqueadas. 
     private int numBSpots = 0;
@@ -82,11 +80,11 @@ public class Knight extends JFrame implements MouseListener {
     private JMenuItem jmChSize;
     private JMenuItem jmInstrucciones;
 
-    
     /**
-     * Metodo principal donde se ejecuta el programa. Ajusta el lookAndFeel
-     * del programa y realiza un llamado al metodo Start().
-     * @param args 
+     * Metodo principal donde se ejecuta el programa. Ajusta el lookAndFeel del
+     * programa y realiza un llamado al metodo Start().
+     *
+     * @param args
      */
     public static void main(String[] args) {
 
@@ -101,31 +99,33 @@ public class Knight extends JFrame implements MouseListener {
         //Se marca la ventana como objeto visible.    
         Knight.start();
     }
-    
+
     /**
-     * Metodo donde se inicializa la ventana del programa, notifica al
-     * usuario de la actual configuración del tablero de DIMENSION x DIMENSION,
-     * y consulta al usuario si desea cambiarlo para crear una nueva instancia
-     * de nuevas dimensiones escogidas por el usuario.
+     * Metodo donde se inicializa la ventana del programa, notifica al usuario
+     * de la actual configuración del tablero de DIMENSION x DIMENSION, y
+     * consulta al usuario si desea cambiarlo para crear una nueva instancia de
+     * nuevas dimensiones escogidas por el usuario.
      */
     public static void start() {
         k = new Knight(DIMENSION);
         k.setVisible(true);
         int newDim = k.changeSizePane();
-        
+
         if (newDim != DIMENSION) {
+            DIMENSION = newDim;
             k.dispose();
             k = null;
             k = new Knight(newDim);
             k.setVisible(true);
-            DIMENSION = newDim;
-        } 
+
+        }
     }
-    
+
     /**
      * Constructor de la ventana que contiene el programa. Llama las funciones
      * necesarias para inicializar una ventana con menú, y un tablero tipo
      * ajedrez de DIMENSION x DIMENSION
+     *
      * @param DIMENSION Dimensión que tendrá el tablero.
      */
     public Knight(int DIMENSION) {
@@ -138,10 +138,14 @@ public class Knight extends JFrame implements MouseListener {
 
     /**
      * Metodo que inicializa todos los componentes de la ventana que no tienen
-     * que ver con botones del menú izquierdo ni el tablero.
-     * Se da dimensiones a la ventana y se inicializa el menú superior
+     * que ver con botones del menú izquierdo ni el tablero. Se da dimensiones a
+     * la ventana y se inicializa el menú superior
      */
     public void initComponents() {
+
+        //Inicialización de los arrays implementados en el programa.
+        busySpots = new boolean[DIMENSION * DIMENSION];
+        sol = new int[DIMENSION * DIMENSION];
 
         //OBTENER RESOLUCION DE PANTALLA
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -153,36 +157,36 @@ public class Knight extends JFrame implements MouseListener {
         this.setTitle("Knight's tour");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
-        
+
         //Establecer icono de ventana. 
         ImageIcon wi = new ImageIcon("IMAGENES/knight.png");
         Image windowIcon = wi.getImage();
         this.setIconImage(windowIcon);
-        
-        //INICIALIZACIÓN DEL MENU
+
+        //INICIALIZACIÓN DE LA BARRA DE MENU
         jmBar = new JMenuBar();
         jMenu = new JMenu("Tablero");
         jmBar.add(jMenu);
-        
+
         jmChSize = new JMenuItem("Cambiar dimensiones");
-        jmChSize.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, 
+        jmChSize.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C,
                 ActionEvent.CTRL_MASK));
         jmChSize.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 int newDim = k.changeSizePane();
                 if (newDim != DIMENSION) {
+                    DIMENSION = newDim;
+
                     k.dispose();
                     k = null;
                     k = new Knight(newDim);
                     k.setVisible(true);
-                    DIMENSION = newDim;
                 }
-                
             }
         });
         jMenu.add(jmChSize);
-        
+
         jmInstrucciones = new JMenuItem("Instrucciones");
         jmInstrucciones.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I,
                 ActionEvent.CTRL_MASK));
@@ -192,7 +196,7 @@ public class Knight extends JFrame implements MouseListener {
                 info();
             }
         });
-        
+
         jMenu.add(jmInstrucciones);
         jMenu.addSeparator();
         this.setJMenuBar(jmBar);
@@ -202,6 +206,7 @@ public class Knight extends JFrame implements MouseListener {
     /**
      * Metodo que inicializa e imprime en pantalla el tablero del programa.
      * Ajusta el tablero con un número de filas y columnas igual a DIMENSION
+     *
      * @param DIMENSION numero de filas y columnas del tablero.
      */
     public void initBoard(int DIMENSION) {
@@ -223,8 +228,8 @@ public class Knight extends JFrame implements MouseListener {
     }
 
     /**
-     * Metodo que inicializa el menú de control del programa donde se alojan
-     * los botones: Play/Pause, reset, move back, move forward, info, generar
+     * Metodo que inicializa el menú de control del programa donde se alojan los
+     * botones: Play/Pause, reset, move back, move forward, info, generar
      * solución, bloquear casillas, colocar caballo.
      */
     public void initControlMenu() {
@@ -375,62 +380,78 @@ public class Knight extends JFrame implements MouseListener {
     }
 
     /**
-     * Metodo que ejecuta la acción correspondiente al botón play/pause.
-     * Genera un nuevo hilo para realizar el recorrido al array solución.
+     * Metodo que ejecuta la acción correspondiente al botón play/pause. Genera
+     * un nuevo hilo para realizar el recorrido al array solución.
+     *
      * @param evt evento de presionar botón.
      */
     private void jbPlayPauseActionPerformed(ActionEvent evt) {
-        play = !play;
-        
-        if (!play) return;
-        
+        int iconSize = 30;
+        ImageIcon iplay = new ImageIcon(new ImageIcon("IMAGENES/play.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+        ImageIcon ipause = new ImageIcon(new ImageIcon("IMAGENES/pause.png").getImage().getScaledInstance(iconSize, iconSize, Image.SCALE_DEFAULT));
+
+        play = !play; //Cambiar el estado de la variable.
+
+        if (!play) {
+            /*Cuando el estado de play == false, no se está ejecutando el 
+            recorrido al tablero. Poner ícono de play en botón.*/
+            jbPlayPause.setIcon(iplay);
+            return;
+        }
+
+        /*Cuando play == true, se está ejecutando el recorrido al tablero.
+        Poner ícono de pause en botón.*/
+        jbPlayPause.setIcon(ipause);
+
+        /*Ejecutar bucle en otro hilo para evitar que la ventana se bloquee
+        al ejecutar el recorrido al tablero*/
         Thread t = new Thread() {
             @Override
             public void run() {  // override the run() for the running behaviors
-                for (int i = 0; i < 100000; ++i) {
-                     
-                    while (globalIndex < sol.length - numBSpots) {
-                        if (!play) break;
-                        moveForward();
-                        board.paintComponents(board.getGraphics());
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                while (globalIndex < sol.length - numBSpots) {
+                    if (!play) break; //Si se presiona pausa, terminar bucle.
+                    
+                    moveForward();
+                    board.paintComponents(board.getGraphics()); //Repintado
+                    
+                    //Dormir por 200ms para ralentizar recorrido al tablero
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }
         };
         t.start();  // call back run()
-        
 
     }
-    
+
     /**
      * Metodo que realiza la acción correspondiente al botón mover hacia
-     * adelante.
-     * Realiza una llamada a moveForward()
-     * @param evt 
+     * adelante. Realiza una llamada a moveForward()
+     *
+     * @param evt
      */
     private void jbRightActionPerformed(ActionEvent evt) {
         moveForward();
     }
 
     /**
-     * Metodo que realiza la acción correspondiente al botón mover hacia
-     * atrás.
+     * Metodo que realiza la acción correspondiente al botón mover hacia atrás.
      * Realiza una llamada a moveBack()
-     * @param evt 
+     *
+     * @param evt
      */
     private void jbLeftActionPerformed(ActionEvent evt) {
         moveBack();
     }
 
     /**
-     * Metodo que realiza la acción correspondiente al botón reset.
-     * Realiza una llamada a reset()
-     * @param evt 
+     * Metodo que realiza la acción correspondiente al botón reset. Realiza una
+     * llamada a reset()
+     *
+     * @param evt
      */
     private void jbResetActionPerformed(ActionEvent evt) {
         reset();
@@ -439,7 +460,8 @@ public class Knight extends JFrame implements MouseListener {
     /**
      * Metodo que realiza la acción correspondiente al botón bloquear casilla.
      * Modifica el cursor del programa para mostrar un ícono de bloqueo.
-     * @param evt 
+     *
+     * @param evt
      */
     private void jbBlockActionPerformed(ActionEvent evt) {
 
@@ -477,14 +499,15 @@ public class Knight extends JFrame implements MouseListener {
     /**
      * Metodo que realiza la acción correspondiente al botón generar solución.
      * Inicializa las variables necesarias para realizar la llamada al algoritmo
-     * que genera una solución y modifica el estado del programa permitiendo
-     * al usuario utilizar los botones play/pause, mover hacia atrás, mover
-     * hacia adelante si el algoritmo ha generado una solución. En caso contra-
-     * rio, no hace nada.
-     * @param evt 
+     * que genera una solución y modifica el estado del programa permitiendo al
+     * usuario utilizar los botones play/pause, mover hacia atrás, mover hacia
+     * adelante si el algoritmo ha generado una solución. En caso contra- rio,
+     * no hace nada.
+     *
+     * @param evt
      */
     private void jbLightBulbActionPerformed(ActionEvent evt) {
-        
+
         boolean validSolution = true;
 
         //Contar el número de casillas bloqueadas. 
@@ -497,12 +520,15 @@ public class Knight extends JFrame implements MouseListener {
         //Desactivar botón. 
         jbLightBulb.setEnabled(false);
 
+        //Iniciar ventana que visualiza el resultado del algoritmo
         Algorithm.initCombinationsWindow(this);
+        //Bloquear this para forzar cierre de combinationsWindow
         this.setEnabled(false);
-        
-        
+
+        //Ejecución del algoritmo basado en backtracking
         sol = Algorithm.KnightsTour(board, busySpots, knightBox);
-        
+
+        //sol[0] == -1 -> no se ha conseguido solución
         if (sol[0] != -1) {
             //Habilitar flechas para que el usuario pueda mover el caballero.
             if (validSolution) {
@@ -511,15 +537,17 @@ public class Knight extends JFrame implements MouseListener {
                 jbRight.setEnabled(true);
             }
 
+            //Desabilitar botones de bloquear y colocar caballo
             jbBlock.setEnabled(false);
             jbKnight.setEnabled(false);
-        }   
+        }
     }
 
     /**
      * Metodo que realiza la acción correspondiente al botón información.
      * Realiza una llamada a info()
-     * @param evt 
+     *
+     * @param evt
      */
     private void jbHelpActionPerformed(ActionEvent evt) {
         info();
@@ -528,7 +556,8 @@ public class Knight extends JFrame implements MouseListener {
     /**
      * Metodo que realiza la acción correspondiente al botón colocar caballo.
      * Modifica el cursor del programa para mostrar el ícono del caballo.
-     * @param evt 
+     *
+     * @param evt
      */
     private void jbKnightActionPerformed(ActionEvent evt) {
 
@@ -543,7 +572,7 @@ public class Knight extends JFrame implements MouseListener {
             menu.setCursor(c);
             board.setCursor(c);
 
-//            //Habilitar casillas.
+            //Habilitar casillas.
             jbLightBulb.setEnabled(false);
             jbBlock.setEnabled(false);
 
@@ -573,12 +602,13 @@ public class Knight extends JFrame implements MouseListener {
     /**
      * Metodo que imprime en la ventana del programa el tablero de ajedrez, con
      * el formato tradicional y con un número de filas y columnas igual a
-     * DIMENSION.
-     * FÓRMULA USADA: Posición = casilla(j)+Dimension*Fila(i)
-     * @param DIMENSION el número de las filas y columnas 
+     * DIMENSION. FÓRMULA USADA: Posición = casilla(j)+Dimension*Fila(i)
+     *
+     * @param DIMENSION el número de las filas y columnas
      */
     public void printBoard(int DIMENSION) {
 
+        //Realizar recorrido a filas y columnas para dar forma al tablero
         for (int i = 0; i < DIMENSION; i++) {
             for (int j = 0; j < DIMENSION; j++) {
 
@@ -587,7 +617,12 @@ public class Knight extends JFrame implements MouseListener {
                 box.addMouseListener(this);
 
                 if (DIMENSION % 2 == 0) {
-
+                    
+                    /*
+                    Código para asegurar que el pintado de las casillas corres-
+                    ponda con el de un tablero normal de ajedrez, independiente-
+                    mente del número de filas y columnas escogido.
+                    */
                     if ((((j + (DIMENSION * i)) % 2 == 0)) && (i % 2 == 0)) {
 
                         box.setBackground(Color.white);
@@ -618,42 +653,51 @@ public class Knight extends JFrame implements MouseListener {
                         box.setBackground(Color.black);
                     }
                 }
+                //Añadir la casilla al tablero
                 board.add(box);
             }
         }
     }
-    
+
     /**
-     * Función que notifica al usuario de la actual configuración del tablero
-     * de DIMENSION x DIMENSION y consulta al usuario si desea cambiarlo.
-     * Llama a la función JOptionPane.showInputDialog() y obtiene el valor
-     * de la nueva dimensión a partir de la respuesta.
+     * Función que notifica al usuario de la actual configuración del tablero de
+     * DIMENSION x DIMENSION y consulta al usuario si desea cambiarlo. Llama a
+     * la función JOptionPane.showInputDialog() y obtiene el valor de la nueva
+     * dimensión a partir de la respuesta.
+     *
      * @return la nueva dimensión escogida por el usuario para el tablero.
      */
     public int changeSizePane() {
+        //DECLARACIONES
         String title = "Configuración del tablero";
-        String message = "El tablero está configurado como un tablero de "+
-                "ajedrez de 8x8.\nSi desea cambiarlo, elija una opción de "+
-                "la lista.\nSino, presione cancelar.\n";
-        String options[] = {"2x2","3x3","4x4","5x5","6x6",
-                "7x7","8x8","9x9","10x10"};
-        final int indexOfDefault = DIMENSION -2; //Opción 8x8 ocupa posición 6 dentro del array
+        String message = "El tablero está configurado como un tablero de "
+                + "ajedrez de 8x8.\nSi desea cambiarlo, elija una opción de "
+                + "la lista.\nSino, presione cancelar.\n";
+        String options[] = {"2x2", "3x3", "4x4", "5x5", "6x6",
+            "7x7", "8x8", "9x9", "10x10"};
+        final int indexOfDefault = DIMENSION - 2; //Opción 8x8 ocupa posición 6 dentro del array
         int option = 0;
-        String option_str = (String) JOptionPane.showInputDialog(null, message, title, 
-                JOptionPane.QUESTION_MESSAGE, 
-                null, options, options[indexOfDefault]);
         
+        /*Llamada a showInputDialog para crear una ventana emergente simple
+        y consultar al usuario*/
+        String option_str = (String) JOptionPane.showInputDialog(null, message, title,
+                JOptionPane.QUESTION_MESSAGE,
+                null, options, options[indexOfDefault]);
+
+        /*Si se presiona cancelar, se conserva el número de filas y columnas
+        por defecto*/
         if (option_str == null) {
             return indexOfDefault + 2;
         } else {
-            for (int i = 0; i<options.length;i++) {
+            //Buscar equivalencia numérica de opción escogida por usuario.
+            for (int i = 0; i < options.length; i++) {
                 if (option_str.equals(options[i])) {
                     option = i;
                     break;
                 }
             }
         }
-        return option + 2;     
+        return option + 2;
     }
 
     /**
@@ -670,8 +714,9 @@ public class Knight extends JFrame implements MouseListener {
 
     /**
      * Función que devuelve el estado de una de las casillas del tablero.
+     *
      * @param jl casilla a consultar estado.
-     * @return true si el ícono de la casilla es igual a null. False en caso 
+     * @return true si el ícono de la casilla es igual a null. False en caso
      * contrario
      */
     public boolean isEmptyBox(JLabel jl) {
@@ -688,15 +733,13 @@ public class Knight extends JFrame implements MouseListener {
     public int findPosition(JLabel label) {
 
         int position = -1;
-
+        
+        /*Recorrido a los componentes del tablero para identificar la casilla
+        presionada*/
         for (int i = 0; i < board.getComponentCount(); i++) {
-
             if (board.getComponent(i).equals(label)) {
-
                 position = i;
-
             }
-
         }
 
         return position;
@@ -704,17 +747,18 @@ public class Knight extends JFrame implements MouseListener {
     }
 
     /**
-     * Metodo que actualiza el tablero moviendo el caballo a la siguiente 
+     * Metodo que actualiza el tablero moviendo el caballo a la siguiente
      * casilla, correspondiente a la solución obtenida por el algoritmo Knights-
-     * tour.
-     * Marca con un número indicando la ordinalidad del paso realizado la casi-
-     * lla donde el caballo se encontraba antes de moveForward(). Coloca el
-     * ícono del caballo en la nueva casilla.
+     * tour. Marca con un número indicando la ordinalidad del paso realizado la
+     * casi- lla donde el caballo se encontraba antes de moveForward(). Coloca
+     * el ícono del caballo en la nueva casilla.
      */
     public void moveForward() {
-
+        //Check si se ha finalizado el recorrido
         if (globalIndex < sol.length - numBSpots) {
-
+            
+            /*Obtener jLabel donde se encuentra caballo actualmente para enume-
+            rar el salto actual*/
             JLabel aux;
             aux = (JLabel) board.getComponent(sol[globalIndex]);
             aux.setIcon(null);
@@ -723,6 +767,7 @@ public class Knight extends JFrame implements MouseListener {
             aux.setFont(new Font("Serif", Font.ITALIC, 50));
             aux.setForeground(Color.red);
 
+            /*Obtener label donde saltará el caballo para colocar el icono*/
             ImageIcon knight = new ImageIcon(new ImageIcon("IMAGENES/knight.png").getImage().getScaledInstance(aux.getWidth() - 20, aux.getHeight() - 20, Image.SCALE_DEFAULT));
             globalIndex++;
             aux = (JLabel) board.getComponent(sol[globalIndex]);
@@ -733,17 +778,19 @@ public class Knight extends JFrame implements MouseListener {
     }
 
     /**
-     * Metodo que actualiza el tablero moviendo el caballo a la anterior 
+     * Metodo que actualiza el tablero moviendo el caballo a la anterior
      * casilla, correspondiente a la solución obtenida por el algoritmo Knights-
-     * tour.
-     * Coloca el ícono del caballo en la casilla donde se encontraba en el paso
-     * anterior reemplazando el número que indicaba el salto realizado antes de
-     * moveBack(). Modifica el ícono donde se encontraba el caballo a null.
+     * tour. Coloca el ícono del caballo en la casilla donde se encontraba en el
+     * paso anterior reemplazando el número que indicaba el salto realizado
+     * antes de moveBack(). Modifica el ícono donde se encontraba el caballo a
+     * null.
      */
     public void moveBack() {
-
+        //Check si se puede saltar hacia atrás
         if (globalIndex > 0) {
-
+            
+            /*Obtener jLabel donde se encuentra el caballo para quitar el ícono
+            y conseguir el jLabel de la casilla anterior para colocarlo ahí*/
             JLabel aux = (JLabel) board.getComponent(sol[globalIndex]);
             aux.setIcon(null);
             ImageIcon knight = new ImageIcon(new ImageIcon("IMAGENES/knight.png").getImage().getScaledInstance(aux.getWidth() - 20, aux.getHeight() - 20, Image.SCALE_DEFAULT));
@@ -752,9 +799,7 @@ public class Knight extends JFrame implements MouseListener {
             aux.setText(null);
             aux.setIcon(knight);
             aux.setHorizontalAlignment(JLabel.CENTER);
-
         }
-
     }
 
     /**
@@ -801,7 +846,8 @@ public class Knight extends JFrame implements MouseListener {
 
     /**
      * Metodo de evento de ratón. No implementado.
-     * @param e 
+     *
+     * @param e
      */
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -810,7 +856,8 @@ public class Knight extends JFrame implements MouseListener {
 
     /**
      * Metodo de evento de ratón. No implementado.
-     * @param e 
+     *
+     * @param e
      */
     @Override
     public void mousePressed(MouseEvent e) {
@@ -821,11 +868,13 @@ public class Knight extends JFrame implements MouseListener {
      * Metodo que ejecuta el código correspondiente al estado del programa.
      * Permite al usuario colocar el caballo en una casilla y bloquear tantas
      * casillas como quiera el usuario.
-     * @param e 
+     *
+     * @param e
      */
     @Override
     public void mouseReleased(MouseEvent e) {
 
+        //Check si se ha realizado un click con el botón izquierdo
         if (e.getButton() == MouseEvent.BUTTON1) {
 
             //Declaraciones
@@ -833,21 +882,27 @@ public class Knight extends JFrame implements MouseListener {
             ImageIcon block = new ImageIcon(new ImageIcon("IMAGENES/block.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
             ImageIcon knight = new ImageIcon(new ImageIcon("IMAGENES/knight.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
 
+            //Si se ha seleccionado bloquear casillas
             if (setBlockedBoxes) {
-
+                //Verificar que la casilla esté vacía
                 if (isEmptyBox(label)) {
+                    //Colocar ícono
                     label.setIcon(block);
                     label.setHorizontalAlignment(JLabel.CENTER);
                     busySpots[findPosition(label)] = true;
 
                 } else if (busySpots[findPosition(label)] == true) {
+                    //Quitar el ícono de la casilla seleccionada.
                     label.setIcon(null);
                     busySpots[findPosition(label)] = false;
                 }
             }
-
+            
+            //Si se ha seleccionado colocar caballo
             if (setKnightStartBox) {
 
+                /*Verificar que la casilla esté vacía y el caballo no se ha
+                colocado*/
                 if ((isEmptyBox(label)) && (knightBox == -1)) {
 
                     label.setIcon(knight);
@@ -856,7 +911,8 @@ public class Knight extends JFrame implements MouseListener {
                     busySpots[knightBox] = true;
 
                 } else if ((knightBox > -1) && (isEmptyBox(label))) {
-
+                    /*Quitar el caballo de donde estaba y colocarlo en nueva
+                    casilla*/
                     JLabel auxLabel;
                     auxLabel = (JLabel) board.getComponent(knightBox);
                     auxLabel.setIcon(null);
@@ -868,7 +924,7 @@ public class Knight extends JFrame implements MouseListener {
                     busySpots[knightBox] = true;
 
                 } else if (knightBox == findPosition(label)) {
-
+                    //Quitar caballo si se ha presionado la misma casilla
                     busySpots[knightBox] = false;
                     label.setIcon(null);
                     knightBox = -1;
@@ -880,7 +936,8 @@ public class Knight extends JFrame implements MouseListener {
 
     /**
      * Metodo de evento de ratón. No implementado.
-     * @param e 
+     *
+     * @param e
      */
     @Override
     public void mouseEntered(MouseEvent e) {
@@ -889,7 +946,8 @@ public class Knight extends JFrame implements MouseListener {
 
     /**
      * Metodo de evento de ratón. No implementado.
-     * @param e 
+     *
+     * @param e
      */
     @Override
     public void mouseExited(MouseEvent e) {
