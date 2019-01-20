@@ -26,8 +26,8 @@ import javax.swing.UnsupportedLookAndFeelException;
 public class Knight extends JFrame implements MouseListener {
 
     //Variables globales.
-    private static final int DIMENSION = 8;
-
+    private static final int DIMENSION = 5;
+    
     //Array que indica las casillas bloqueadas o ocupadas. 
     //-TRUE = Ocupada. 
     //-FALSE = Libre.
@@ -41,7 +41,7 @@ public class Knight extends JFrame implements MouseListener {
 
     //Casilla donde se ubica el caballero.
     private int knightBox = -1;
-    
+
     //Indica si el estado actual es Play o Pause
     private boolean play = false;
 
@@ -78,7 +78,7 @@ public class Knight extends JFrame implements MouseListener {
         this.setTitle("Knight's tour");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
-        
+
         //Establecer icono de ventana. 
         ImageIcon wi = new ImageIcon("IMAGENES/knight.png");
         Image windowIcon = wi.getImage();
@@ -165,7 +165,6 @@ public class Knight extends JFrame implements MouseListener {
         jbReset.setToolTipText("Resetear");
 
         //Agregar escuchadores de eventos.
-        
         jbReset.addActionListener(new ActionListener() {
 
             @Override
@@ -174,7 +173,7 @@ public class Knight extends JFrame implements MouseListener {
             }
 
         });
-        
+
         jbLightBulb.addActionListener(new ActionListener() {
 
             @Override
@@ -183,7 +182,7 @@ public class Knight extends JFrame implements MouseListener {
             }
 
         });
-        
+
         jbHelp.addActionListener(new ActionListener() {
 
             @Override
@@ -225,27 +224,27 @@ public class Knight extends JFrame implements MouseListener {
         this.add(menu, BorderLayout.WEST);
 
     }
-    
+
     private void jbResetActionPerformed(ActionEvent evt) {
 
         //Resetear array de casillas ocupadas. 
         for (int i = 0; i < busySpots.length; i++) {
-            
-            busySpots[i] = false; 
-            
+
+            busySpots[i] = false;
+
         }
-        
+
         //Quitar el caballero del tablero. 
-        knightBox = -1; 
-        
-        JLabel aux; 
-        
+        knightBox = -1;
+
+        JLabel aux;
+
         //Quitar los iconos del tablero. 
         for (int i = 0; i < board.getComponentCount(); i++) {
-            
+
             aux = (JLabel) board.getComponent(i);
             aux.setIcon(null);
-            
+
         }
 
     }
@@ -281,7 +280,7 @@ public class Knight extends JFrame implements MouseListener {
             jbKnight.setEnabled(true);
 
             setBlockedBoxes = false;
-            
+
             if (knightBox != -1) {
 
                 //Habilitar botones.
@@ -294,24 +293,19 @@ public class Knight extends JFrame implements MouseListener {
 
     }
 
-    private void jbLightBulbActionPerformed(ActionEvent evt) {
-
-        int [] sol = new int[DIMENSION*DIMENSION];   
+    private synchronized void jbLightBulbActionPerformed(ActionEvent evt) {
         
-        Algorithm.initBar();
-        
-        try {
-            sol = Algorithm.KnightsTour(board, busySpots, knightBox);
-        } catch (Exception ex) {
-            Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
+        int[] sol = new int[DIMENSION * DIMENSION];
+        Algorithm.initCombinationsWindow();
+        Thread t = new Thread(new Algorithm(board, busySpots, knightBox));
+        t.start();
+  
         for (int i = 0; i < sol.length; i++) {
-            System.out.print(sol[i]+", ");
+            System.out.print(sol[i] + ", ");
         }
-        
+
     }
-    
+
     private void jbHelpActionPerformed(ActionEvent evt) {
 
         info();
@@ -372,9 +366,8 @@ public class Knight extends JFrame implements MouseListener {
             Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        //Se marca la ventana como objeto visible.    
-        new Knight().setVisible(true);
-
+        Knight k = new Knight();
+        k.setVisible(true);
     }
 
     //  FÓRMULA USADA: Posición = casilla(j)+Dimension*Fila(i)
@@ -447,7 +440,6 @@ public class Knight extends JFrame implements MouseListener {
      * @param label "Label" que se desea buscar.
      * @return Posición donde se ubica. -1 si no ha sido encontrado.
      */
-    
     public int findPosition(JLabel label) {
 
         int position = -1;
@@ -464,12 +456,6 @@ public class Knight extends JFrame implements MouseListener {
 
         return position;
 
-    }
-    
-    public static int getDimension() {
-    
-        return DIMENSION; 
-    
     }
 
     @Override
@@ -512,22 +498,22 @@ public class Knight extends JFrame implements MouseListener {
                     label.setIcon(knight);
                     label.setHorizontalAlignment(JLabel.CENTER);
                     knightBox = findPosition(label);
-                    busySpots[knightBox] = true; 
+                    busySpots[knightBox] = true;
 
                 } else if ((knightBox > -1) && (isEmptyBox(label))) {
 
                     JLabel auxLabel;
                     auxLabel = (JLabel) board.getComponent(knightBox);
                     auxLabel.setIcon(null);
-                    busySpots[knightBox] = false; 
+                    busySpots[knightBox] = false;
 
                     label.setIcon(knight);
                     label.setHorizontalAlignment(JLabel.CENTER);
                     knightBox = findPosition(label);
-                    busySpots[knightBox] = true; 
+                    busySpots[knightBox] = true;
 
                 } else if (knightBox == findPosition(label)) {
-                   
+
                     busySpots[knightBox] = false;
                     label.setIcon(null);
                     knightBox = -1;
@@ -546,4 +532,5 @@ public class Knight extends JFrame implements MouseListener {
     public void mouseExited(MouseEvent e) {
         //  throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
 }
