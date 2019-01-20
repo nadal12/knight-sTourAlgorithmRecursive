@@ -15,28 +15,29 @@ import javax.swing.JPanel;
  *
  * @author nadal
  */
-public class Algorithm /*extends Thread */{
+public class Algorithm {
 
     /*Variables utilizadas para visualizar el número de combinaciones fallidas
     intentadas*/
-    private static BigInteger numberOfCombinations = new BigInteger("1"); 
-    private static CombinationsWindow cw; 
-    
+    private static BigInteger numberOfCombinations = new BigInteger("1");
+    private static CombinationsWindow cw;
+
     /**
-     * Metodo que inicializa y visualiza la ventana donde se notifica del
-     * numero de combinaciones intentadas antes de conseguir un resultado
+     * Metodo que inicializa y visualiza la ventana donde se notifica del numero
+     * de combinaciones intentadas antes de conseguir un resultado
+     *
      * @param parentFrame frame desde el cual el usuario interactual con el
      * programa
      */
     public static void initCombinationsWindow(JFrame parentFrame) {
         //Generar la ventana de combinaciones con el frame padre.
         cw = new CombinationsWindow(parentFrame);
-        cw.setVisible(true); 
+        cw.setVisible(true);
     }
-    
+
     /**
-     * Enum para diferenciar entre los 8 diferentes tipos de movimientos 
-     * que puede realizar un caballo dentro de un tablero de ajedrez.
+     * Enum para diferenciar entre los 8 diferentes tipos de movimientos que
+     * puede realizar un caballo dentro de un tablero de ajedrez.
      */
     public enum movements {
         UUR, URR, RRD, RDD, DDL, DLL, LLU, LUU
@@ -44,17 +45,18 @@ public class Algorithm /*extends Thread */{
 
     /**
      * Función que devuelve un array con la secuencia de casillas que el caballo
-     * ha de recorrer para pasar por cada una de las casillas disponibles sin 
+     * ha de recorrer para pasar por cada una de las casillas disponibles sin
      * repetir ni dejar una sin visitar.
+     *
      * @param board el tablero donde se desarrolla el programa.
      * @param busySpots array de booleanos que indica que casillas no estan dis-
      * ponibles.
-     * @param knightBox la posición del caballo dentro del array de componentes 
+     * @param knightBox la posición del caballo dentro del array de componentes
      * de board.
      * @return array con el resultado del algoritmo. Si solution[0] == -1
      * entonces es que no se ha conseguido ninguna combinación que sea solución
      * de la configuración escogida.
-     * 
+     *
      * La función inicializa todas las variables necesarias para realizar la
      * inmersión en la función homónima que realiza un algoritmo de tipo back-
      * tracking para conseguir una solución posible.
@@ -79,59 +81,60 @@ public class Algorithm /*extends Thread */{
             /*Si resultado del algoritmo no ha sido una posible solución, 
             indicar a través de la ventana de número de combinaciones*/
             cw.modifyValue(numberOfCombinations, false);
-            numberOfCombinations = BigInteger.ONE;
             solution[0] = -1;
+        } else {
+
+            //Notificar del número de combinaciones intentadas y devolver solucion
+            cw.modifyValue(numberOfCombinations, true);
         }
-        
-        //Notificar del número de combinaciones intentadas y devolver solucion
-        cw.modifyValue(numberOfCombinations, true);
-        numberOfCombinations = BigInteger.ONE;
-        return solution;
+          numberOfCombinations = BigInteger.ONE;
+          return solution;
     }
 
     /**
      * Función que ejecuta el algoritmo basado en el esquema backtracking para
      * conseguir una solución al problema Knight tour. El algoritmo implementa
      * una función de poda donde cada siguiente salto se realiza hacia la casi-
-     * lla desde la cual el caballo tendrá menos saltos posibles. 
+     * lla desde la cual el caballo tendrá menos saltos posibles.
+     *
      * @param busySpots
      * @param solution
      * @param index
      * @param numBSpots
-     * @return 
+     * @return
      */
     private static boolean KnightsTour(boolean[] busySpots, int[] solution, int index, int numBSpots) {
-        
+
         //Check si se ha llegado a una solución
         if (index + numBSpots < solution.length) {
-            
+
             //Obtener array de posibles movimientos desde posición actual
             ArrayList<Integer> possibleMoves = getPossibleMoves(solution, index, busySpots);
 
             //Recorrido al array de movimientos posibles
             for (int i = 0; i < possibleMoves.size(); i++) {
-                
+
                 /*Realizar movimiento: actualizar solution y busySpots*/
                 solution[index] = possibleMoves.get(i);
                 busySpots[possibleMoves.get(i)] = true;
-                
+
                 //Incrementar indice para llamada recursiva
                 index++;
-                
+
                 /*Realizar llamada recursiva y retornar true si se encontró
                 solución*/
                 if (KnightsTour(busySpots, solution, index, numBSpots)) {
                     return true;
                 }
-                
+
                 /*Decrementar indice para realizar otro intento con el siguien-
                 te movimiento disponible, en la misma posición desde donde no 
                 se ha encontrado una solución*/
                 index--;
-                
+
                 //Incrementar contador de combinaciones
                 numberOfCombinations = numberOfCombinations.add(BigInteger.ONE);
-                
+
                 /*Remover información del intento realizado antes de llamada
                 recursiva*/
                 busySpots[possibleMoves.get(i)] = false;
@@ -150,10 +153,11 @@ public class Algorithm /*extends Thread */{
      * saltar desde la posición actual del caballo y devuelve un array de saltos
      * posibles ordenado de manera ascendente según el número de saltos posibles
      * desde cada una de las posibles casillas.
+     *
      * @param solution array que contendrá la secuencia solución del problema
      * @param index indica la posición actual dentro del array solución
      * @param busySpots indica las casillas no disponibles para saltar.
-     * @return 
+     * @return
      */
     private static ArrayList<Integer> getPossibleMoves(int[] solution, int index, boolean[] busySpots) {
         ArrayList<Integer> possibleMoves = new ArrayList<>();
@@ -181,15 +185,16 @@ public class Algorithm /*extends Thread */{
     }
 
     /**
-     * Función que toma los arrays posMov y numPosMov que contienen el número de 
+     * Función que toma los arrays posMov y numPosMov que contienen el número de
      * una casilla y el número de saltos posibles desde esa casilla para ordenar
      * posMov de menor cantidad de saltos posibles a mayor cantidad de saltos
      * posibles.
+     *
      * @param posMov array que contiene el número de la casilla.
      * @param numPosMov array que contiene el número de saltos posibles desde
      * cada posible
-     * @return un array con el número de las casillas posibles ordenado según
-     * el número de saltos posibles desde cada una, en orden ascendente.
+     * @return un array con el número de las casillas posibles ordenado según el
+     * número de saltos posibles desde cada una, en orden ascendente.
      */
     private static ArrayList<Integer> insertionSort(ArrayList<Integer> posMov, ArrayList<Integer> numPosMov) {
         int min, tmp, tmp2;
@@ -217,6 +222,7 @@ public class Algorithm /*extends Thread */{
     /**
      * Función que cuenta cuantos saltos son posibles desde la posicíon hipoté-
      * tica del caball indicada por nextMove
+     *
      * @param nextMove indica la casilla de la cual se quiere obtener el numero
      * de saltos
      * @param busySpots indica las casillas no disponibles para saltar.
@@ -241,9 +247,9 @@ public class Algorithm /*extends Thread */{
 
     /**
      * Función que calcula la siguiente posición del caballo dentro del tablero
-     * según el movimiento a realizar indicado por la posición i dentro del 
+     * según el movimiento a realizar indicado por la posición i dentro del
      * array de enums y la posición actual del caballo.
-     * 
+     *
      * @param i indica la posición del movimiento dentro del array de enums
      * @param knightPos indica la posición actual del caballo
      * @param dim indica la dimensión del tablero del programa
@@ -262,22 +268,30 @@ public class Algorithm /*extends Thread */{
                  a la posicion actual del caballo.
                 -Saltar a una casilla a la derecha significa sumar una unidad a 
                  la posición actual del caballo.
-            */
-            case UUR: return knightPos + 1 - dim * 2;
-            
-            case URR: return knightPos + 2 - dim;
-            
-            case RRD: return knightPos + 2 + dim;
-            
-            case RDD: return knightPos + 1 + dim * 2;
-            
-            case DDL: return knightPos - 1 + dim * 2;
-            
-            case DLL: return knightPos - 2 + dim;
-            
-            case LLU: return knightPos - 2 - dim;
-            
-            case LUU: return knightPos - 1 - dim * 2;
+             */
+            case UUR:
+                return knightPos + 1 - dim * 2;
+
+            case URR:
+                return knightPos + 2 - dim;
+
+            case RRD:
+                return knightPos + 2 + dim;
+
+            case RDD:
+                return knightPos + 1 + dim * 2;
+
+            case DDL:
+                return knightPos - 1 + dim * 2;
+
+            case DLL:
+                return knightPos - 2 + dim;
+
+            case LLU:
+                return knightPos - 2 - dim;
+
+            case LUU:
+                return knightPos - 1 - dim * 2;
         }
         /*En caso de que i no corresponda con ningún movimiento, devolver -1
         como marca de error*/
@@ -285,10 +299,11 @@ public class Algorithm /*extends Thread */{
     }
 
     /**
-     * Función que verifica que el movimiento indicado por i dentro del array
-     * de enums sea válido para la posición actual del caballo, según la fila y
+     * Función que verifica que el movimiento indicado por i dentro del array de
+     * enums sea válido para la posición actual del caballo, según la fila y
      * columne que este ocupe y la direccion y cantidad de saltos que realice
      * cada movimiento
+     *
      * @param busySpots indica las casillas no disponibles para saltar
      * @param i indica la posición del movimiento dentro del array de enums
      * @param knightPos indica la posición actual del caballo
@@ -298,7 +313,7 @@ public class Algorithm /*extends Thread */{
     private static boolean possibleToMove(boolean[] busySpots, int i, int knightPos, int dimension) {
         int knightRow = knightPos / dimension;
         int knightCol = knightPos % dimension;
-        
+
         //Realizar comprobacion dependiendo del movimiento escogido
         switch (movements.values()[i]) {
             case UUR:
@@ -386,8 +401,9 @@ public class Algorithm /*extends Thread */{
     }
 
     /**
-     * Metodo que devuelve el número de combinaciones probadas antes de llegar
-     * a un resultado.
+     * Metodo que devuelve el número de combinaciones probadas antes de llegar a
+     * un resultado.
+     *
      * @return número de combinaciones intentadas.
      */
     public static BigInteger getCombinationCount() {
