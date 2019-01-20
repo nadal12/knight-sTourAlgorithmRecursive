@@ -1,5 +1,6 @@
 package knight;
 
+import com.sun.glass.events.KeyEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -12,22 +13,36 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.TimerTask;
+import java.util.Timer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 public class Knight extends JFrame implements MouseListener {
 
-    //Variables globales.
-    private static final int DIMENSION = 5;
+    //Variable usada para inicializar tablero
+    static Knight k;
     
+    //Array generado por el algoritmo KnightsTour
+    int [] solution;
+    //Variable global para iterar sobre el array
+    int iterator = 0; 
+    
+    //Variables globales.
+    private static int DIMENSION = 8;
+
     //Array que indica las casillas bloqueadas o ocupadas. 
     //-TRUE = Ocupada. 
     //-FALSE = Libre.
@@ -41,9 +56,11 @@ public class Knight extends JFrame implements MouseListener {
 
     //Casilla donde se ubica el caballero.
     private int knightBox = -1;
-
+    
     //Indica si el estado actual es Play o Pause
     private boolean play = false;
+    private boolean stepFWD = false;
+    private boolean stepBCK = false;
 
     //Declaraciones de la interfaz gráfica. 
     private JButton jbLeft;
@@ -57,18 +74,22 @@ public class Knight extends JFrame implements MouseListener {
     private JLabel box;
     private JPanel board;
     private JPanel menu;
+    private JMenuBar jmBar;
+    private JMenu jMenu;
+    private JMenuItem jmChSize;
+    private JMenuItem jmInstrucciones;
 
-    public Knight() {
+    public Knight(int DIMENSION) {
 
         initComponents();
         initControlMenu();
-        initBoard();
+        initBoard(DIMENSION);
 
     }
 
     public void initComponents() {
 
-        //Obtener resolución de pantalla. 
+        //OBTENER RESOLUCION DE PANTALLA
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int width = screenSize.width;
         int height = screenSize.height;
@@ -78,15 +99,53 @@ public class Knight extends JFrame implements MouseListener {
         this.setTitle("Knight's tour");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
-
+        
         //Establecer icono de ventana. 
         ImageIcon wi = new ImageIcon("IMAGENES/knight.png");
         Image windowIcon = wi.getImage();
         this.setIconImage(windowIcon);
+        
+        //INICIALIZACIÓN DEL MENU
+        jmBar = new JMenuBar();
+        jMenu = new JMenu("Tablero");
+        jmBar.add(jMenu);
+        
+        jmChSize = new JMenuItem("Cambiar dimensiones");
+        jmChSize.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, 
+                ActionEvent.CTRL_MASK));
+        jmChSize.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                int newDim = k.changeSizePane();
+                if (newDim != DIMENSION) {
+                    k.dispose();
+                    k = null;
+                    k = new Knight(newDim);
+                    k.setVisible(true);
+                    DIMENSION = newDim;
+                }
+                
+            }
+        });
+        jMenu.add(jmChSize);
+        
+        jmInstrucciones = new JMenuItem("Instrucciones");
+        jmInstrucciones.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I,
+                ActionEvent.CTRL_MASK));
+        jmInstrucciones.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                info();
+            }
+        });
+        
+        jMenu.add(jmInstrucciones);
+        jMenu.addSeparator();
+        this.setJMenuBar(jmBar);
 
     }
 
-    public void initBoard() {
+    public void initBoard(int DIMENSION) {
 
         //Se inicializa el tablero 
         board = new JPanel();
@@ -97,13 +156,13 @@ public class Knight extends JFrame implements MouseListener {
         gl.setColumns(DIMENSION);
         board.setLayout(gl);
 
-        printBoard();
+        printBoard(DIMENSION);
 
         //Se añade el panel a la ventana. 
         this.add(board);
 
     }
-
+    
     public void initControlMenu() {
 
         //Declaraciones.
@@ -165,6 +224,13 @@ public class Knight extends JFrame implements MouseListener {
         jbReset.setToolTipText("Resetear");
 
         //Agregar escuchadores de eventos.
+        jbPlayPause.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                jbPlayPauseActionPerformed(evt);
+            }
+        });
+        
         jbReset.addActionListener(new ActionListener() {
 
             @Override
@@ -173,7 +239,7 @@ public class Knight extends JFrame implements MouseListener {
             }
 
         });
-
+        
         jbLightBulb.addActionListener(new ActionListener() {
 
             @Override
@@ -182,7 +248,7 @@ public class Knight extends JFrame implements MouseListener {
             }
 
         });
-
+        
         jbHelp.addActionListener(new ActionListener() {
 
             @Override
@@ -224,27 +290,115 @@ public class Knight extends JFrame implements MouseListener {
         this.add(menu, BorderLayout.WEST);
 
     }
-
+    
+    public int changeSizePane() {
+        String title = "Configuración del tablero";
+        String message = "El tablero está configurado como un tablero de "+
+                "ajedrez de 8x8.\nSi desea cambiarlo, elija una opción de "+
+                "la lista.\nSino, presione cancelar.\n";
+        String options[] = {"2x2","3x3","4x4","5x5","6x6",
+                "7x7","8x8","9x9","10x10"};
+        final int indexOfDefault = DIMENSION -2; //Opción 8x8 ocupa posición 6 dentro del array
+        int option = 0;
+        String option_str = (String) JOptionPane.showInputDialog(null, message, title, 
+                JOptionPane.QUESTION_MESSAGE, 
+                null, options, options[indexOfDefault]);
+        
+        if (option_str == null) {
+            return indexOfDefault + 2;
+        } else {
+            for (int i = 0; i<options.length;i++) {
+                if (option_str.equals(options[i])) {
+                    option = i;
+                    break;
+                }
+            }
+        }
+        return option + 2;     
+    }
+    
+    public static void start() {
+        k = new Knight(DIMENSION);
+        k.setVisible(true);
+        int newDim = k.changeSizePane();
+        
+        if (newDim != DIMENSION) {
+            k.dispose();
+            k = null;
+            k = new Knight(newDim);
+            k.setVisible(true);
+            DIMENSION = newDim;
+        }
+        
+    }
+    
+    public void jbPlayPauseActionPerformed(ActionEvent evt) {
+        JLabel label = (JLabel) board.getComponent(solution[0]);
+        ImageIcon knight = new ImageIcon(new ImageIcon("IMAGENES/knight.png").getImage().getScaledInstance(label.getWidth() - 20, label.getHeight() - 20, Image.SCALE_DEFAULT));
+        play = !play;
+        
+        Object obj = new Object();
+        
+        int delay = 500;
+        TimerTask tk;
+        
+        Timer t;
+                
+        for (int i = 1; i < solution.length;) {
+          
+            label.setIcon(null);
+            label.setText((Integer.toString(i-1)));
+            label.paintImmediately(label.getBounds());
+            
+            label = (JLabel) board.getComponent(solution[i]);
+            label.setIcon(knight);
+            label.paintImmediately(label.getBounds());
+            
+            t = new Timer();
+            tk = new TimerTask() {
+                @Override
+                public void run () {
+                    synchronized(obj) {
+                        obj.notify();
+                    }
+                }
+            };
+            t.schedule(tk, delay);
+            
+            try {
+                synchronized (obj) {
+                    obj.wait();
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        
+                
+           
+    }
+    
     private void jbResetActionPerformed(ActionEvent evt) {
 
         //Resetear array de casillas ocupadas. 
         for (int i = 0; i < busySpots.length; i++) {
-
-            busySpots[i] = false;
-
+            
+            busySpots[i] = false; 
+            
         }
-
+        
         //Quitar el caballero del tablero. 
-        knightBox = -1;
-
-        JLabel aux;
-
+        knightBox = -1; 
+        
+        JLabel aux; 
+        
         //Quitar los iconos del tablero. 
         for (int i = 0; i < board.getComponentCount(); i++) {
-
+            
             aux = (JLabel) board.getComponent(i);
             aux.setIcon(null);
-
+            
         }
 
     }
@@ -280,7 +434,7 @@ public class Knight extends JFrame implements MouseListener {
             jbKnight.setEnabled(true);
 
             setBlockedBoxes = false;
-
+            
             if (knightBox != -1) {
 
                 //Habilitar botones.
@@ -293,19 +447,23 @@ public class Knight extends JFrame implements MouseListener {
 
     }
 
-    private synchronized void jbLightBulbActionPerformed(ActionEvent evt) {
+    private void jbLightBulbActionPerformed(ActionEvent evt) {
+
+        solution = new int[DIMENSION*DIMENSION];   
         
-        int[] sol = new int[DIMENSION * DIMENSION];
-        Algorithm.initCombinationsWindow();
-        Thread t = new Thread(new Algorithm(board, busySpots, knightBox));
-        t.start();
-  
-        for (int i = 0; i < sol.length; i++) {
-            System.out.print(sol[i] + ", ");
+        try {
+            solution = Algorithm.KnightsTour(board, busySpots, knightBox);
+        } catch (Exception ex) {
+            Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        
+        for (int i = 0; i < solution.length; i++) {
+            System.out.print(solution[i]+", ");
+        }
+        jbPlayPause.setEnabled(true);
+        
     }
-
+    
     private void jbHelpActionPerformed(ActionEvent evt) {
 
         info();
@@ -366,12 +524,13 @@ public class Knight extends JFrame implements MouseListener {
             Logger.getLogger(Knight.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        Knight k = new Knight();
-        k.setVisible(true);
+        //Se marca la ventana como objeto visible.    
+        Knight.start();
+
     }
 
     //  FÓRMULA USADA: Posición = casilla(j)+Dimension*Fila(i)
-    public void printBoard() {
+    public void printBoard(int DIMENSION) {
 
         for (int i = 0; i < DIMENSION; i++) {
             for (int j = 0; j < DIMENSION; j++) {
@@ -457,7 +616,7 @@ public class Knight extends JFrame implements MouseListener {
         return position;
 
     }
-
+    
     @Override
     public void mouseClicked(MouseEvent e) {
         // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -498,22 +657,22 @@ public class Knight extends JFrame implements MouseListener {
                     label.setIcon(knight);
                     label.setHorizontalAlignment(JLabel.CENTER);
                     knightBox = findPosition(label);
-                    busySpots[knightBox] = true;
+                    busySpots[knightBox] = true; 
 
                 } else if ((knightBox > -1) && (isEmptyBox(label))) {
 
                     JLabel auxLabel;
                     auxLabel = (JLabel) board.getComponent(knightBox);
                     auxLabel.setIcon(null);
-                    busySpots[knightBox] = false;
+                    busySpots[knightBox] = false; 
 
                     label.setIcon(knight);
                     label.setHorizontalAlignment(JLabel.CENTER);
                     knightBox = findPosition(label);
-                    busySpots[knightBox] = true;
+                    busySpots[knightBox] = true; 
 
                 } else if (knightBox == findPosition(label)) {
-
+                   
                     busySpots[knightBox] = false;
                     label.setIcon(null);
                     knightBox = -1;
@@ -532,5 +691,4 @@ public class Knight extends JFrame implements MouseListener {
     public void mouseExited(MouseEvent e) {
         //  throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
 }
